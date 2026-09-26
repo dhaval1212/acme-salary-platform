@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+
+    <!--
+        OWASP Dependency Check suppressions for the ACME Compensation Hub.
+
+        Each suppression MUST have:
+          - A <notes> block explaining why the CVE is suppressed
+          - A <cve> or <vulnerabilityName> identifying the finding
+          - A <packageUrl> or <gav> scoping it to the affected artifact
+
+        Reference:
+        https://jeremylong.github.io/DependencyCheck/general/suppression.html
+
+        ──────────────────────────────────────────────────────────────────────
+        Template — copy this block when adding a new suppression:
+
+        <suppress until="YYYY-MM-DD">
+            <notes>
+                CVE-XXXX-YYYY: <brief description of the CVE>.
+                Suppressed because: <reason — e.g., "not reachable in our
+                deployment", "fixed in X.Y.Z but upgrading blocked by Y",
+                "test-scope only dependency">.
+                Review by: <YYYY-MM-DD>
+            </notes>
+            <packageUrl regex="true">^pkg:maven/group/artifact@.*$</packageUrl>
+            <cve>CVE-XXXX-YYYY</cve>
+        </suppress>
+        ──────────────────────────────────────────────────────────────────────
+    -->
+
+    <!-- No suppressions yet — all findings must be addressed or explicitly
+         suppressed with a justification above. -->
+
+</suppressions>

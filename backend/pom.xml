@@ -20,17 +20,7 @@
     <properties>
         <java.version>21</java.version>
         <testcontainers.version>1.20.4</testcontainers.version>
-        <sonar.projectKey>acme-compensation-hub</sonar.projectKey>
-        <sonar.projectName>ACME Compensation Hub</sonar.projectName>
-        <sonar.coverage.jacoco.xmlReportPaths>
-            ${project.build.directory}/site/jacoco/jacoco.xml
-        </sonar.coverage.jacoco.xmlReportPaths>
-        <!-- Exclude application bootstrap and entity boilerplate from Sonar -->
-        <sonar.exclusions>
-            **/CompensationApplication.java,
-            **/dto/**
-        </sonar.exclusions>
-        <sonar.test.exclusions>**/TestFixtures.java</sonar.test.exclusions>
+        <spotbugs.version>4.8.6</spotbugs.version>
     </properties>
 
     <dependencies>
@@ -153,11 +143,61 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- ── Static analysis ──────────────────────────────────── -->
+            <!-- ── Static analysis: SpotBugs ────────────────────────── -->
+            <!--
+                Bytecode-level bug analysis. Detects null-dereferences,
+                bad practices, dodgy code, and security issues.
+                Fails the build on any HIGH-confidence bug.
+            -->
             <plugin>
-                <groupId>org.sonarsource.scanner.maven</groupId>
-                <artifactId>sonar-maven-plugin</artifactId>
-                <version>5.1.0.4751</version>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>${spotbugs.version}</version>
+                <configuration>
+                    <!-- Medium = report, High = fail -->
+                    <effort>Max</effort>
+                    <threshold>High</threshold>
+                    <!-- Exclude DTOs and the bootstrap class (no logic to analyse) -->
+                    <excludeFilterFile>../config/spotbugs-exclude.xml</excludeFilterFile>
+                </configuration>
+            </plugin>
+
+            <!-- ── Static analysis: Checkstyle ──────────────────────── -->
+            <!--
+                Enforces consistent code style across the project.
+                Uses Google Java Style as the base; project-specific
+                overrides live in config/checkstyle.xml.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <!-- version managed by spring-boot-starter-parent -->
+                <configuration>
+                    <configLocation>../config/checkstyle.xml</configLocation>
+                    <suppressionsLocation>../config/checkstyle-suppressions.xml</suppressionsLocation>
+                    <consoleOutput>true</consoleOutput>
+                    <failsOnError>true</failsOnError>
+                    <!-- Exclude generated sources -->
+                    <excludes>**/dto/**</excludes>
+                </configuration>
+            </plugin>
+
+            <!-- ── Security: OWASP Dependency Check ─────────────────── -->
+            <!--
+                Scans all declared dependencies against the NVD CVE database.
+                Run via: ./mvnw dependency-check:check
+                CI passes -DfailBuildOnCVSS=7 to gate on HIGH/CRITICAL only.
+            -->
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>10.0.3</version>
+                <configuration>
+                    <failBuildOnCVSS>11</failBuildOnCVSS>
+                    <!-- Default is non-failing locally; CI overrides to 7 -->
+                    <suppressionFile>../config/owasp-suppressions.xml</suppressionFile>
+                    <formats>HTML,JSON</formats>
+                </configuration>
             </plugin>
 
             <!-- ── Unit test runner ────────────────────────────────── -->

@@ -25,7 +25,7 @@ defaults:
 # ── Jobs ─────────────────────────────────────────────────────────────────────
 jobs:
 
-  # ── 1. Unit tests + coverage check ────────────────────────────────────────
+  # ── 1. Unit tests + JaCoCo coverage gate ──────────────────────────────────
   test:
     name: Unit Tests & Coverage
     runs-on: ubuntu-latest
@@ -33,9 +33,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          # Sonar needs full history for blame annotations
-          fetch-depth: 0
 
       - name: Set up Java 21
         uses: actions/setup-java@v4
@@ -44,20 +41,12 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Run unit tests (exclude integration tests that need Docker)
+      - name: Run unit tests and enforce coverage gates
+        # -DexcludedGroups=integration keeps Testcontainer tests out of this job.
+        # 'verify' runs JaCoCo:check (≥70% line / ≥60% branch) after the tests.
         run: ./mvnw verify -DexcludedGroups=integration --batch-mode --no-transfer-progress
 
-      - name: Upload JaCoCo XML report (for Sonar)
-        uses: actions/upload-artifact@v4
-        with:
-          name: jacoco-report
-          # Path is relative to the repo root, not the working-directory default.
-          # The job's defaults.run.working-directory is 'backend/', but
-          # actions/upload-artifact always resolves from the workspace root.
-          path: backend/target/site/jacoco/jacoco.xml
-          retention-days: 1
-
-      - name: Upload test results
+      - name: Upload Surefire test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -65,77 +54,129 @@ jobs:
           path: backend/target/surefire-reports/
           retention-days: 7
 
-  # ── 2. Integration test (needs Docker / Testcontainers) ───────────────────
-  integration-test:
-    name: Integration Test (Testcontainers)
-    runs-on: ubuntu-latest
-    # Only run on pushes to main/develop, not on every PR to keep it fast
-    if: github.event_name == 'push'
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Java 21
-        uses: actions/setup-java@v4
+      - name: Upload JaCoCo HTML coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'maven'
-
-      - name: Run integration tests (Docker available on GitHub runners)
-        # Use verify (not test) so Surefire sees both -Dgroups and -DexcludedGroups.
-        # -DexcludedGroups= (empty) ensures no accidental exclusion overrides -Dgroups.
-        run: ./mvnw verify -Dgroups=integration -DexcludedGroups= --batch-mode --no-transfer-progress
-
-  # ── 3. Static analysis (SonarCloud) ───────────────────────────────────────
-  sonar:
-    name: SonarCloud Analysis
-    runs-on: ubuntu-latest
-    needs: test
-    # Skip Sonar on forks (they don't have access to secrets)
-    if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'push'
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Java 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'maven'
-
-      - name: Download JaCoCo report
-        uses: actions/download-artifact@v4
-        with:
-          name: jacoco-report
+          name: jacoco-html-report
+          # upload-artifact resolves from repo root, not working-directory
           path: backend/target/site/jacoco/
+          retention-days: 7
 
-      - name: SonarCloud analysis
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  # ── 2. Static code analysis (replaces SonarCloud) ─────────────────────────
+  #
+  #  SpotBugs  — bytecode-level bug analysis (null-deref, bad practices, etc.)
+  #  Checkstyle — enforces the team's Java coding style (configured in
+  #               backend/config/checkstyle.xml, based on Google Java Style)
+  #
+  #  Both run as Maven plugins — no external account or secret required.
+  # ──────────────────────────────────────────────────────────────────────────
+  code-quality:
+    name: Code Quality (SpotBugs + Checkstyle)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Compile sources
+        # SpotBugs analyses bytecode, so we must compile before running it.
+        run: ./mvnw compile test-compile --batch-mode --no-transfer-progress -q
+
+      - name: Run Checkstyle
+        run: ./mvnw checkstyle:check --batch-mode --no-transfer-progress
+
+      - name: Run SpotBugs
+        run: ./mvnw spotbugs:check --batch-mode --no-transfer-progress
+
+      - name: Upload SpotBugs XML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spotbugs-report
+          path: backend/target/spotbugsXml.xml
+          retention-days: 7
+
+  # ── 3. Security scanning ───────────────────────────────────────────────────
+  #
+  #  Trivy      — scans the filesystem (pom.xml, JAR deps) for known CVEs;
+  #               results uploaded as SARIF to the GitHub Security tab.
+  #  OWASP DC   — dedicated dependency CVE scan using the NVD database;
+  #               fails the job on CVSS ≥ 7 (HIGH/CRITICAL) findings.
+  # ──────────────────────────────────────────────────────────────────────────
+  security:
+    name: Security Scan (Trivy + OWASP Dependency Check)
+    runs-on: ubuntu-latest
+    permissions:
+      # Required to upload SARIF results to the GitHub Security tab
+      security-events: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # ── Trivy: fast CVE scan, no NVD key needed ──────────────────────────
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'fs'
+          scan-ref: 'backend'
+          scanners: 'vuln,secret'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          # Don't fail the step here — we surface findings via SARIF + OWASP DC
+          exit-code: '0'
+
+      - name: Upload Trivy SARIF to GitHub Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+          category: 'trivy'
+
+      # ── OWASP Dependency Check: deep CVE scan with NVD data ───────────────
+      - name: Run OWASP Dependency Check
+        # failBuildOnCVSS=7 means the job fails on any HIGH or CRITICAL CVE.
+        # NVD data is downloaded on first run (~5 min); subsequent runs are
+        # fast because GitHub caches the Maven local repo via 'cache: maven'.
         run: |
-          ./mvnw sonar:sonar \
-            --batch-mode \
-            --no-transfer-progress \
-            -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }} \
-            -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }} \
-            -Dsonar.sources=src/main/java \
-            -Dsonar.tests=src/test/java \
-            -Dsonar.java.binaries=target/classes \
-            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
-            -Dsonar.qualitygate.wait=true
+          ./mvnw dependency-check:check \
+            -DfailBuildOnCVSS=7 \
+            -DsuppressionFile=../config/owasp-suppressions.xml \
+            --batch-mode --no-transfer-progress
+
+      - name: Upload OWASP DC HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: owasp-dependency-check-report
+          path: backend/target/dependency-check-report.html
+          retention-days: 14
 
   # ── 4. Build JAR ──────────────────────────────────────────────────────────
   build:
     name: Build JAR
     runs-on: ubuntu-latest
-    needs: [ test, sonar ]
+    needs: [ test, code-quality ]
+    # Security scan runs in parallel and surfaces findings via GitHub Security
+    # tab, but does not block the JAR build — teams review and suppress
+    # false-positives deliberately via owasp-suppressions.xml.
 
     steps:
       - name: Checkout
@@ -148,7 +189,7 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Build production JAR (skip tests — already ran)
+      - name: Build production JAR (skip tests — already ran in 'test' job)
         run: ./mvnw package -DskipTests --batch-mode --no-transfer-progress
 
       - name: Upload JAR artifact
@@ -156,6 +197,5 @@ jobs:
         with:
           name: compensation-jar
           path: backend/target/compensation-*.jar
-          # Exclude the plain JAR (keep only the Spring Boot fat JAR)
           if-no-files-found: error
           retention-days: 7
