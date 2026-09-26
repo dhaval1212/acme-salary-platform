@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="0003-create-indexes" author="acme">
+        <createIndex tableName="employees" indexName="idx_employees_department">
+            <column name="department"/>
+        </createIndex>
+
+        <createIndex tableName="employees" indexName="idx_employees_country">
+            <column name="country"/>
+        </createIndex>
+
+        <createIndex tableName="employees" indexName="idx_employees_status">
+            <column name="status"/>
+        </createIndex>
+
+        <!-- Covering index for current-salary lookup: employee_id + effective_date DESC -->
+        <sql>
+            CREATE INDEX idx_comp_employee_date
+            ON compensation_history (employee_id, effective_date DESC);
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="0002-create-compensation-history" author="acme">
+        <createTable tableName="compensation_history">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="employee_id" type="UUID">
+                <constraints nullable="false"
+                             foreignKeyName="fk_comp_employee"
+                             references="employees(id)"
+                             deleteCascade="false"/>
+            </column>
+            <column name="amount" type="NUMERIC(15,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="CHAR(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="effective_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMPTZ" defaultValueComputed="now()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <sql>
+            ALTER TABLE compensation_history
+            ADD CONSTRAINT chk_compensation_amount_positive
+            CHECK (amount >= 0);
+
+            ALTER TABLE compensation_history
+            ADD CONSTRAINT uq_compensation_employee_date
+            UNIQUE (employee_id, effective_date);
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

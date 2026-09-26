@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <include file="db/changelog/0001-create-employees.xml"/>
+    <include file="db/changelog/0002-create-compensation-history.xml"/>
+    <include file="db/changelog/0003-create-indexes.xml"/>
+    <include file="db/changelog/0004-seed-data.xml"/>
+
+</databaseChangeLog>
