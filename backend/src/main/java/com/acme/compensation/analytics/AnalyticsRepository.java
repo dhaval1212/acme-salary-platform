@@ -1,6 +1,5 @@
 package com.acme.compensation.analytics;
 
-import com.acme.compensation.analytics.dto.DepartmentStats;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;

@@ -29,4 +29,16 @@
     <!-- Enum files: ModifierOrder false-positives on enum constants. -->
     <suppress files="EmployeeStatus\.java" checks="ModifierOrder"/>
 
+    <!-- JPA entities use single-line getter/setter bodies for compactness:
+             public UUID getId() { return id; }
+         LeftCurly flags the '{' on the same line as the method signature.
+         This is widely accepted Java style for pure accessor methods. -->
+    <suppress files="Employee\.java"            checks="LeftCurly"/>
+    <suppress files="CompensationHistory\.java"  checks="LeftCurly"/>
+
+    <!-- SLF4J loggers are universally declared as 'log' (lowercase).
+         Checkstyle's ConstantName rule requires UPPER_SNAKE_CASE for static
+         final fields, but 'log' is the established convention for loggers. -->
+    <suppress checks="ConstantName" message="Name 'log' must match"/>
+
 </suppressions>

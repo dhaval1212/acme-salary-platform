@@ -15,10 +15,11 @@
     <property name="fileExtensions" value="java"/>
 
     <!-- ── Suppressions ──────────────────────────────────────────────────── -->
-    <module name="SuppressionFilter">
-        <property name="file" value="${config_loc}/checkstyle-suppressions.xml"/>
-        <property name="optional" value="false"/>
-    </module>
+    <!--
+        Suppression file is wired via <suppressionsLocation> in pom.xml.
+        ${config_loc} is undefined when loading config from a filesystem path,
+        so SuppressionFilter must NOT be declared here.
+    -->
 
     <!-- ── File-level checks ─────────────────────────────────────────────── -->
     <module name="FileTabCharacter">

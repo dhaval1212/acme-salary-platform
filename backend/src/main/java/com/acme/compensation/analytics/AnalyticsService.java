@@ -39,8 +39,12 @@ public class AnalyticsService {
     }
 
     private BigDecimal toBigDecimal(Object value) {
-        if (value == null) return BigDecimal.ZERO;
-        if (value instanceof BigDecimal bd) return bd;
+        if (value == null) {
+            return BigDecimal.ZERO;
+        }
+        if (value instanceof BigDecimal bd) {
+            return bd;
+        }
         return new BigDecimal(value.toString());
     }
 }
