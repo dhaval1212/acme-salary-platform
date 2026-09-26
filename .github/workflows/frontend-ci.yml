@@ -1,0 +1,189 @@
+name: Frontend CI
+
+# ── Triggers ─────────────────────────────────────────────────────────────────
+on:
+  push:
+    branches: [ "main", "develop" ]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-ci.yml"
+  pull_request:
+    branches: [ "main", "develop" ]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-ci.yml"
+
+# Cancel in-progress runs for the same branch on new push
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: frontend
+
+# ── Jobs ──────────────────────────────────────────────────────────────────────
+jobs:
+
+  # ── 1. Type check + lint ──────────────────────────────────────────────────
+  #
+  #  Mirrors backend 'code-quality' job (Checkstyle + SpotBugs).
+  #  TypeScript compiler — catches type errors before tests run.
+  #  ESLint              — enforces Angular style rules and catches bad patterns.
+  # ──────────────────────────────────────────────────────────────────────────
+  code-quality:
+    name: Type Check & Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript type check
+        # Fails the job on any type error — same strictness as the Java
+        # compiler check in the backend pipeline.
+        run: npm run typecheck
+
+      - name: ESLint
+        # Fails the job on any error (warnings are allowed).
+        # Mirrors Checkstyle in the backend pipeline.
+        run: npm run lint
+
+  # ── 2. Unit tests + coverage ──────────────────────────────────────────────
+  #
+  #  Mirrors backend 'test' job (JUnit + JaCoCo).
+  #  Karma runs Jasmine tests in ChromeHeadless.
+  #  Coverage report is uploaded as an artifact for review.
+  # ──────────────────────────────────────────────────────────────────────────
+  test:
+    name: Unit Tests & Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install ChromeHeadless (required by Karma)
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q google-chrome-stable
+
+      - name: Run unit tests with coverage
+        # --watch=false ensures Karma exits after one run (CI mode).
+        # --code-coverage generates lcov report in coverage/acme-frontend/.
+        run: npm run test:ci
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage-report
+          path: frontend/coverage/
+          retention-days: 7
+
+  # ── 3. Security scan ──────────────────────────────────────────────────────
+  #
+  #  Mirrors backend 'security' job (Trivy + OWASP Dependency Check).
+  #  npm audit — checks all dependencies against the npm advisory database.
+  #  Trivy     — scans node_modules for known CVEs, secrets in source.
+  #              Results uploaded to the GitHub Security tab as SARIF.
+  # ──────────────────────────────────────────────────────────────────────────
+  security:
+    name: Security Scan (npm audit + Trivy)
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: npm audit
+        # --audit-level=critical fails the job on CRITICAL advisories for production deps.
+        run: npm audit --audit-level=critical --omit=dev
+        # Dev dependencies are excluded — they are not shipped to production.
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: 'fs'
+          scan-ref: 'frontend'
+          scanners: 'vuln,secret'
+          format: 'sarif'
+          output: 'trivy-frontend-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'
+
+      - name: Upload Trivy SARIF to GitHub Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-frontend-results.sarif'
+          category: 'trivy-frontend'
+
+  # ── 4. Production build ───────────────────────────────────────────────────
+  #
+  #  Mirrors backend 'build' job (Maven package).
+  #  Runs only after code-quality passes — no point building broken code.
+  #  Uploads the dist/ folder as an artifact ready for the deployment stage.
+  # ──────────────────────────────────────────────────────────────────────────
+  build:
+    name: Production Build
+    runs-on: ubuntu-latest
+    needs: [ code-quality, test ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production bundle
+        run: npm run build:prod
+
+      - name: Upload production artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/acme-frontend/
+          if-no-files-found: error
+          retention-days: 7
