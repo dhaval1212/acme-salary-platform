@@ -7,9 +7,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDialog } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { EmployeeService } from '../../../core/services/employee.service';
 import { CompensationService } from '../../../core/services/compensation.service';
@@ -27,7 +27,7 @@ import { CompensationFormDialogComponent } from '../../compensation/compensation
   imports: [
     DatePipe,
     MatCardModule, MatButtonModule, MatIconModule, MatTableModule,
-    MatDividerModule, MatDialogModule, MatProgressSpinnerModule, MatSnackBarModule,
+    MatDividerModule, MatProgressSpinnerModule,
     PageHeaderComponent, StatusBadgeComponent, CurrencyDisplayComponent, EmptyStateComponent,
   ],
   templateUrl: './employee-detail.component.html',

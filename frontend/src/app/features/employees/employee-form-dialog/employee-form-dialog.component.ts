@@ -5,7 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { EmployeeService } from '../../../core/services/employee.service';
 import { Employee } from '../../../core/models/employee.model';
@@ -20,7 +20,7 @@ export interface EmployeeFormDialogData {
   imports: [
     ReactiveFormsModule,
     MatDialogModule, MatButtonModule, MatInputModule,
-    MatFormFieldModule, MatProgressSpinnerModule, MatSnackBarModule,
+    MatFormFieldModule, MatProgressSpinnerModule,
   ],
   templateUrl: './employee-form-dialog.component.html',
 })

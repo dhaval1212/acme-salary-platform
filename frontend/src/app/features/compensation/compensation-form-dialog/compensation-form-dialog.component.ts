@@ -7,7 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { CompensationService } from '../../../core/services/compensation.service';
 
@@ -22,7 +22,7 @@ export interface CompensationFormDialogData {
   imports: [
     ReactiveFormsModule,
     MatDialogModule, MatButtonModule, MatInputModule, MatFormFieldModule,
-    MatDatepickerModule, MatNativeDateModule, MatProgressSpinnerModule, MatSnackBarModule,
+    MatDatepickerModule, MatNativeDateModule, MatProgressSpinnerModule,
   ],
   templateUrl: './compensation-form-dialog.component.html',
 })

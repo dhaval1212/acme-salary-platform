@@ -9,7 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { AnalyticsService } from '../../../core/services/analytics.service';
 import { DepartmentStats } from '../../../core/models/analytics.model';
@@ -23,7 +23,7 @@ import { CurrencyDisplayComponent } from '../../../shared/components/currency-di
   imports: [
     ReactiveFormsModule, DecimalPipe,
     MatCardModule, MatTableModule, MatInputModule, MatButtonModule,
-    MatIconModule, MatFormFieldModule, MatProgressSpinnerModule, MatSnackBarModule,
+    MatIconModule, MatFormFieldModule, MatProgressSpinnerModule,
     PageHeaderComponent, EmptyStateComponent, CurrencyDisplayComponent,
   ],
   templateUrl: './analytics-dashboard.component.html',
