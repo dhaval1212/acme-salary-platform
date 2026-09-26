@@ -1,0 +1,66 @@
+services:
+
+  # ── PostgreSQL ─────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: acme-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${DB_NAME:-compensation}
+      POSTGRES_USER:     ${DB_USER:-compensation}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-compensation}
+    ports:
+      # Expose 5432 locally so you can connect with a DB client (DBeaver, etc.)
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-compensation} -d ${DB_NAME:-compensation}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ── Spring Boot API ────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: acme-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL:      jdbc:postgresql://db:5432/${DB_NAME:-compensation}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-compensation}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-compensation}
+      SPRING_LIQUIBASE_CONTEXTS:  local
+    ports:
+      # Expose 8080 for direct API access / Postman during development
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  # ── Angular Frontend ───────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: acme-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      # The app is available at http://localhost:4200
+      - "4200:80"
+
+volumes:
+  postgres_data:
+    # Named volume so database survives container restarts
