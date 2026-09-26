@@ -1,0 +1,63 @@
+# ─── macOS ────────────────────────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ─── IDE — IntelliJ IDEA ──────────────────────────────────────────────────────
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# ─── IDE — VS Code ────────────────────────────────────────────────────────────
+.vscode/
+!.vscode/extensions.json
+
+# ─── Environment & secrets ────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+application-local.properties
+application-local.yml
+
+# ─── Java / Spring Boot (backend/) ───────────────────────────────────────────
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+
+# Maven wrapper cache
+.mvn/wrapper/maven-wrapper.jar
+
+# Spring Boot DevTools restart trigger
+.reloadtrigger
+
+# ─── Angular (frontend/) ─────────────────────────────────────────────────────
+node_modules/
+dist/
+.angular/
+.cache/
+
+# Angular test output
+coverage/
+/frontend/junit.xml
+
+# ─── Docker ───────────────────────────────────────────────────────────────────
+# Keep docker-compose files; ignore override with local secrets
+docker-compose.override.yml
+
+# ─── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+
+.kiro/*
