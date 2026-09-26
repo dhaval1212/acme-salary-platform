@@ -5,7 +5,7 @@
     <mat-form-field appearance="outline" class="form__field">
       <mat-label>Full Name</mat-label>
       <input matInput formControlName="fullName" placeholder="Alice Smith">
-      @if (form.get('fullName')?.hasError('required')) {
+      @if (form.get('fullName')?.hasError('required') && form.get('fullName')?.touched) {
         <mat-error>Full name is required</mat-error>
       }
     </mat-form-field>
@@ -13,10 +13,10 @@
     <mat-form-field appearance="outline" class="form__field">
       <mat-label>Email</mat-label>
       <input matInput formControlName="email" type="email" placeholder="alice@acme.com">
-      @if (form.get('email')?.hasError('required')) {
+      @if (form.get('email')?.hasError('required') && form.get('email')?.touched) {
         <mat-error>Email is required</mat-error>
       }
-      @if (form.get('email')?.hasError('email')) {
+      @if (form.get('email')?.hasError('email') && form.get('email')?.touched) {
         <mat-error>Must be a valid email address</mat-error>
       }
     </mat-form-field>
@@ -24,7 +24,7 @@
     <mat-form-field appearance="outline" class="form__field">
       <mat-label>Department</mat-label>
       <input matInput formControlName="department" placeholder="Engineering">
-      @if (form.get('department')?.hasError('required')) {
+      @if (form.get('department')?.hasError('required') && form.get('department')?.touched) {
         <mat-error>Department is required</mat-error>
       }
     </mat-form-field>
@@ -32,7 +32,7 @@
     <mat-form-field appearance="outline" class="form__field">
       <mat-label>Job Title</mat-label>
       <input matInput formControlName="jobTitle" placeholder="Software Engineer">
-      @if (form.get('jobTitle')?.hasError('required')) {
+      @if (form.get('jobTitle')?.hasError('required') && form.get('jobTitle')?.touched) {
         <mat-error>Job title is required</mat-error>
       }
     </mat-form-field>
@@ -40,7 +40,7 @@
     <mat-form-field appearance="outline" class="form__field">
       <mat-label>Country</mat-label>
       <input matInput formControlName="country" placeholder="US">
-      @if (form.get('country')?.hasError('required')) {
+      @if (form.get('country')?.hasError('required') && form.get('country')?.touched) {
         <mat-error>Country is required</mat-error>
       }
     </mat-form-field>
@@ -50,12 +50,14 @@
 <mat-dialog-actions align="end">
   <button mat-button (click)="dialogRef.close(false)" [disabled]="saving">Cancel</button>
   <button mat-flat-button color="primary" (click)="save()" [disabled]="form.invalid || saving">
-    @if (saving) { <mat-spinner diameter="18" style="display:inline-block;margin-right:8px"></mat-spinner> }
+    @if (saving) {
+      <mat-spinner diameter="18" style="display:inline-block; margin-right:8px;"></mat-spinner>
+    }
     {{ isEdit ? 'Update' : 'Create' }}
   </button>
 </mat-dialog-actions>
 
 <style>
-.form { display: flex; flex-direction: column; gap: 4px; min-width: 420px; padding-top: 8px; }
-.form__field { width: 100%; }
+  .form { display: flex; flex-direction: column; gap: 4px; min-width: 420px; padding-top: 8px; }
+  .form__field { width: 100%; }
 </style>

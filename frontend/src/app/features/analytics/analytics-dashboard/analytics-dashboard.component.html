@@ -1,0 +1,111 @@
+<app-page-header
+  title="Compensation Analytics"
+  subtitle="Pay statistics by department"
+  icon="bar_chart">
+</app-page-header>
+
+<!-- Summary cards -->
+@if (!loading && stats.length > 0) {
+  <div class="summary-cards">
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-card__value">{{ totalHeadcount | number }}</div>
+        <div class="summary-card__label">Total Employees</div>
+      </mat-card-content>
+    </mat-card>
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-card__value">{{ stats.length }}</div>
+        <div class="summary-card__label">Departments</div>
+      </mat-card-content>
+    </mat-card>
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-card__value">
+          <app-currency-display [amount]="overallAvgSalary" currencyCode="USD">
+          </app-currency-display>
+        </div>
+        <div class="summary-card__label">Org Avg Salary</div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+}
+
+<!-- Filters -->
+<mat-card class="filters-card">
+  <mat-card-content>
+    <div class="filters">
+      <mat-form-field appearance="outline">
+        <mat-label>Department</mat-label>
+        <input matInput [formControl]="departmentControl" placeholder="Engineering">
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Country</mat-label>
+        <input matInput [formControl]="countryControl" placeholder="US">
+      </mat-form-field>
+      <button mat-flat-button color="primary" (click)="load()">
+        <mat-icon>refresh</mat-icon> Apply
+      </button>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<!-- Stats table -->
+<mat-card>
+  <mat-card-content>
+    @if (loading) {
+      <div class="loading"><mat-spinner diameter="40"></mat-spinner></div>
+    } @else if (stats.length === 0) {
+      <app-empty-state message="No analytics data available" icon="bar_chart">
+      </app-empty-state>
+    } @else {
+      <table mat-table [dataSource]="stats" class="full-width">
+
+        <ng-container matColumnDef="department">
+          <th mat-header-cell *matHeaderCellDef>Department</th>
+          <td mat-cell *matCellDef="let s"><strong>{{ s.department }}</strong></td>
+        </ng-container>
+
+        <ng-container matColumnDef="headcount">
+          <th mat-header-cell *matHeaderCellDef>Headcount</th>
+          <td mat-cell *matCellDef="let s">{{ s.headcount | number }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="avgSalary">
+          <th mat-header-cell *matHeaderCellDef>Avg Salary</th>
+          <td mat-cell *matCellDef="let s">
+            <app-currency-display [amount]="s.avgSalary" currencyCode="USD">
+            </app-currency-display>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="medianSalary">
+          <th mat-header-cell *matHeaderCellDef>Median</th>
+          <td mat-cell *matCellDef="let s">
+            <app-currency-display [amount]="s.medianSalary" currencyCode="USD">
+            </app-currency-display>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="minSalary">
+          <th mat-header-cell *matHeaderCellDef>Min</th>
+          <td mat-cell *matCellDef="let s">
+            <app-currency-display [amount]="s.minSalary" currencyCode="USD">
+            </app-currency-display>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="maxSalary">
+          <th mat-header-cell *matHeaderCellDef>Max</th>
+          <td mat-cell *matCellDef="let s">
+            <app-currency-display [amount]="s.maxSalary" currencyCode="USD">
+            </app-currency-display>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    }
+  </mat-card-content>
+</mat-card>

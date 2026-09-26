@@ -20,9 +20,9 @@ export interface EmployeeFormDialogData {
   imports: [
     ReactiveFormsModule,
     MatDialogModule, MatButtonModule, MatInputModule,
-    MatFormFieldModule, MatProgressSpinnerModule, MatSnackBarModule
+    MatFormFieldModule, MatProgressSpinnerModule, MatSnackBarModule,
   ],
-  templateUrl: './employee-form-dialog.component.html'
+  templateUrl: './employee-form-dialog.component.html',
 })
 export class EmployeeFormDialogComponent implements OnInit {
   form!: FormGroup;
@@ -45,7 +45,7 @@ export class EmployeeFormDialogComponent implements OnInit {
       email:      [this.data.employee?.email      ?? '', [Validators.required, Validators.email, Validators.maxLength(255)]],
       department: [this.data.employee?.department ?? '', [Validators.required, Validators.maxLength(100)]],
       jobTitle:   [this.data.employee?.jobTitle   ?? '', [Validators.required, Validators.maxLength(100)]],
-      country:    [this.data.employee?.country    ?? '', [Validators.required, Validators.maxLength(100)]]
+      country:    [this.data.employee?.country    ?? '', [Validators.required, Validators.maxLength(100)]],
     });
   }
 
@@ -53,11 +53,11 @@ export class EmployeeFormDialogComponent implements OnInit {
     if (this.form.invalid) return;
     this.saving = true;
     const request = this.form.value;
-    const operation = this.isEdit
+    const op = this.isEdit
       ? this.employeeService.update(this.data.employee!.id, request)
       : this.employeeService.create(request);
 
-    operation.subscribe({
+    op.subscribe({
       next: () => {
         this.snackBar.open(this.isEdit ? 'Employee updated' : 'Employee created', 'OK', { duration: 3000 });
         this.dialogRef.close(true);

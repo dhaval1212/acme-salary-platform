@@ -9,11 +9,11 @@ export class AnalyticsService {
   constructor(private api: ApiService) {}
 
   getDepartmentStats(filter: AnalyticsFilter = {}): Observable<DepartmentStats[]> {
-    return this.api.get<ApiResponse<DepartmentStats[]>>('/analytics/departments', {
-      department: filter.department,
-      country: filter.country
-    }).pipe(
-      map(res => res.data)
-    );
+    return this.api
+      .get<ApiResponse<DepartmentStats[]>>('/analytics/departments', {
+        department: filter.department,
+        country: filter.country,
+      })
+      .pipe(map(res => res.data));
   }
 }

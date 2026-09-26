@@ -13,11 +13,15 @@ import { MatIconModule } from '@angular/material/icon';
   `,
   styles: [`
     .empty-state {
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: center; padding: 48px 24px; color: #9e9e9e;
-      &__icon { font-size: 48px; width: 48px; height: 48px; margin-bottom: 12px; }
-      &__message { font-size: 1rem; }
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+      color: #9e9e9e;
     }
+    .empty-state__icon { font-size: 48px; width: 48px; height: 48px; margin-bottom: 12px; }
+    .empty-state__message { font-size: 1rem; margin: 0; }
   `]
 })
 export class EmptyStateComponent {

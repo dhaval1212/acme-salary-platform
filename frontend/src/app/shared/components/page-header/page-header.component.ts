@@ -21,9 +21,22 @@ import { NgIf } from '@angular/common';
       align-items: center;
       gap: 12px;
       margin-bottom: 24px;
-      &__icon { font-size: 32px; width: 32px; height: 32px; color: var(--mat-sys-primary); }
-      &__title { margin: 0; font-size: 1.5rem; font-weight: 500; }
-      &__subtitle { margin: 4px 0 0; color: var(--mat-sys-on-surface-variant); font-size: 0.875rem; }
+    }
+    .page-header__icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #3f51b5;
+    }
+    .page-header__title {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 500;
+    }
+    .page-header__subtitle {
+      margin: 4px 0 0;
+      color: #666;
+      font-size: 0.875rem;
     }
   `]
 })

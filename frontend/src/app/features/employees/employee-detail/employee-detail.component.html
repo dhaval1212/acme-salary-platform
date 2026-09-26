@@ -5,7 +5,9 @@
 @if (!loading && employee) {
   <div class="detail">
     <div class="detail__header">
-      <button mat-icon-button (click)="goBack()"><mat-icon>arrow_back</mat-icon></button>
+      <button mat-icon-button (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
       <app-page-header
         [title]="employee.fullName"
         [subtitle]="employee.jobTitle + ' · ' + employee.department"
@@ -13,18 +15,22 @@
       </app-page-header>
     </div>
 
-    <!-- Profile card -->
     <div class="detail__grid">
+      <!-- Profile card -->
       <mat-card>
         <mat-card-header>
           <mat-card-title>Profile</mat-card-title>
         </mat-card-header>
         <mat-card-content>
           <dl class="profile">
-            <dt>Email</dt><dd>{{ employee.email }}</dd>
-            <dt>Country</dt><dd>{{ employee.country }}</dd>
-            <dt>Status</dt><dd><app-status-badge [status]="employee.status"></app-status-badge></dd>
-            <dt>Member since</dt><dd>{{ employee.createdAt | date:'mediumDate' }}</dd>
+            <dt>Email</dt>
+            <dd>{{ employee.email }}</dd>
+            <dt>Country</dt>
+            <dd>{{ employee.country }}</dd>
+            <dt>Status</dt>
+            <dd><app-status-badge [status]="employee.status"></app-status-badge></dd>
+            <dt>Member since</dt>
+            <dd>{{ employee.createdAt | date:'mediumDate' }}</dd>
           </dl>
         </mat-card-content>
       </mat-card>
@@ -33,7 +39,7 @@
       <mat-card>
         <mat-card-header>
           <mat-card-title>Current Compensation</mat-card-title>
-          <div class="card-actions">
+          <div class="card-action">
             <button mat-stroked-button color="primary" (click)="openCompensationDialog()">
               <mat-icon>edit</mat-icon> Record Change
             </button>
@@ -53,14 +59,15 @@
               </span>
             </div>
           } @else {
-            <app-empty-state message="No compensation recorded yet" icon="payments"></app-empty-state>
+            <app-empty-state message="No compensation recorded yet" icon="payments">
+            </app-empty-state>
           }
         </mat-card-content>
       </mat-card>
     </div>
 
     <!-- Compensation history -->
-    <mat-card class="detail__history">
+    <mat-card>
       <mat-card-header>
         <mat-card-title>Compensation History</mat-card-title>
       </mat-card-header>
@@ -76,7 +83,8 @@
             <ng-container matColumnDef="amount">
               <th mat-header-cell *matHeaderCellDef>Amount</th>
               <td mat-cell *matCellDef="let c">
-                <app-currency-display [amount]="c.amount" [currencyCode]="c.currency"></app-currency-display>
+                <app-currency-display [amount]="c.amount" [currencyCode]="c.currency">
+                </app-currency-display>
               </td>
             </ng-container>
             <ng-container matColumnDef="currency">

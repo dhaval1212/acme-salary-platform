@@ -4,6 +4,8 @@ export const analyticsRoutes: Routes = [
   {
     path: '',
     loadComponent: () =>
-      import('./analytics-dashboard/analytics-dashboard.component').then(m => m.AnalyticsDashboardComponent)
+      import('./analytics-dashboard/analytics-dashboard.component').then(
+        m => m.AnalyticsDashboardComponent
+      )
   }
 ];

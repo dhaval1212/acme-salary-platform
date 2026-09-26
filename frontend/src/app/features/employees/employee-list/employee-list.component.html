@@ -4,7 +4,7 @@
   icon="people">
 </app-page-header>
 
-<!-- Filters row -->
+<!-- Filters -->
 <mat-card class="filters-card">
   <mat-card-content>
     <div class="filters">
@@ -16,12 +16,14 @@
 
       <mat-form-field appearance="outline">
         <mat-label>Department</mat-label>
-        <input matInput [formControl]="departmentControl" (blur)="onFilterChange()" placeholder="Engineering">
+        <input matInput [formControl]="departmentControl"
+               (blur)="onFilterChange()" placeholder="Engineering">
       </mat-form-field>
 
       <mat-form-field appearance="outline">
         <mat-label>Country</mat-label>
-        <input matInput [formControl]="countryControl" (blur)="onFilterChange()" placeholder="US">
+        <input matInput [formControl]="countryControl"
+               (blur)="onFilterChange()" placeholder="US">
       </mat-form-field>
 
       <mat-form-field appearance="outline">
@@ -50,18 +52,18 @@
     }
 
     @if (!loading && employees.length === 0) {
-      <app-empty-state message="No employees found. Try adjusting your filters." icon="people_outline">
+      <app-empty-state
+        message="No employees found. Try adjusting your filters."
+        icon="people_outline">
       </app-empty-state>
     }
 
-    @if (employees.length > 0) {
+    @if (!loading && employees.length > 0) {
       <table mat-table [dataSource]="employees" class="full-width">
 
         <ng-container matColumnDef="fullName">
           <th mat-header-cell *matHeaderCellDef>Name</th>
-          <td mat-cell *matCellDef="let e">
-            <strong>{{ e.fullName }}</strong>
-          </td>
+          <td mat-cell *matCellDef="let e"><strong>{{ e.fullName }}</strong></td>
         </ng-container>
 
         <ng-container matColumnDef="email">
@@ -97,11 +99,12 @@
             <button mat-icon-button matTooltip="View details" (click)="viewDetail(e.id)">
               <mat-icon>visibility</mat-icon>
             </button>
-            <button mat-icon-button matTooltip="Edit" (click)="openEditDialog(e)">
+            <button mat-icon-button matTooltip="Edit" (click)="openEditDialog(e, $event)">
               <mat-icon>edit</mat-icon>
             </button>
             @if (e.status === 'ACTIVE') {
-              <button mat-icon-button matTooltip="Deactivate" color="warn" (click)="deactivate(e)">
+              <button mat-icon-button matTooltip="Deactivate" color="warn"
+                      (click)="deactivate(e, $event)">
                 <mat-icon>person_off</mat-icon>
               </button>
             }
@@ -109,7 +112,10 @@
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="row-hover"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+            class="row-hover"
+            (click)="viewDetail(row.id)">
+        </tr>
       </table>
 
       <mat-paginator

@@ -28,7 +28,7 @@ import { CompensationFormDialogComponent } from '../../compensation/compensation
     DatePipe,
     MatCardModule, MatButtonModule, MatIconModule, MatTableModule,
     MatDividerModule, MatDialogModule, MatProgressSpinnerModule, MatSnackBarModule,
-    PageHeaderComponent, StatusBadgeComponent, CurrencyDisplayComponent, EmptyStateComponent
+    PageHeaderComponent, StatusBadgeComponent, CurrencyDisplayComponent, EmptyStateComponent,
   ],
   templateUrl: './employee-detail.component.html',
   styleUrl: './employee-detail.component.scss'
@@ -69,9 +69,9 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private loadCompensation(id: string): void {
+  loadCompensation(id: string): void {
     this.compensationService.getCurrent(id).pipe(takeUntil(this.destroy$)).subscribe({
-      next: c => this.currentCompensation = c,
+      next: c => { this.currentCompensation = c; },
       error: () => {}
     });
     this.compensationService.getHistory(id).pipe(takeUntil(this.destroy$)).subscribe({

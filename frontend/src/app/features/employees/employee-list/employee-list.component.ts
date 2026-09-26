@@ -9,10 +9,11 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 import { EmployeeService } from '../../../core/services/employee.service';
 import { Employee, EmployeeFilter, EmployeeStatus } from '../../../core/models/employee.model';
@@ -30,8 +31,8 @@ import { EmployeeFormDialogComponent } from '../employee-form-dialog/employee-fo
     ReactiveFormsModule,
     MatTableModule, MatPaginatorModule, MatInputModule, MatSelectModule,
     MatButtonModule, MatIconModule, MatCardModule, MatDialogModule,
-    MatProgressSpinnerModule, MatTooltipModule, MatSnackBarModule,
-    PageHeaderComponent, StatusBadgeComponent, EmptyStateComponent
+    MatProgressSpinnerModule, MatTooltipModule, MatSnackBarModule, MatFormFieldModule,
+    PageHeaderComponent, StatusBadgeComponent, EmptyStateComponent,
   ],
   templateUrl: './employee-list.component.html',
   styleUrl: './employee-list.component.scss'
@@ -44,8 +45,8 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   displayedColumns = ['fullName', 'email', 'department', 'jobTitle', 'country', 'status', 'actions'];
 
   searchControl = new FormControl('');
-  departmentControl = new FormControl<string>('');
-  countryControl = new FormControl<string>('');
+  departmentControl = new FormControl('');
+  countryControl = new FormControl('');
   statusControl = new FormControl<EmployeeStatus | ''>('');
 
   private destroy$ = new Subject<void>();
@@ -97,7 +98,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
       department: this.departmentControl.value ?? '',
       country: this.countryControl.value ?? '',
       status: (this.statusControl.value as EmployeeStatus) || undefined,
-      page: 0
+      page: 0,
     });
   }
 
@@ -110,31 +111,29 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
       width: '520px',
       data: { employee: null }
     });
-    ref.afterClosed().subscribe(result => {
-      if (result) { this.loadEmployees(); }
-    });
+    ref.afterClosed().subscribe(result => { if (result) this.loadEmployees(); });
   }
 
-  openEditDialog(employee: Employee): void {
+  openEditDialog(employee: Employee, event: Event): void {
+    event.stopPropagation();
     const ref = this.dialog.open(EmployeeFormDialogComponent, {
       width: '520px',
       data: { employee }
     });
-    ref.afterClosed().subscribe(result => {
-      if (result) { this.loadEmployees(); }
-    });
+    ref.afterClosed().subscribe(result => { if (result) this.loadEmployees(); });
   }
 
   viewDetail(id: string): void {
     this.router.navigate(['/employees', id]);
   }
 
-  deactivate(employee: Employee): void {
+  deactivate(employee: Employee, event: Event): void {
+    event.stopPropagation();
     const ref = this.dialog.open(ConfirmDialogComponent, {
       data: {
         title: 'Deactivate Employee',
         message: `Deactivate ${employee.fullName}? Their compensation history will be preserved.`,
-        confirmLabel: 'Deactivate'
+        confirmLabel: 'Deactivate',
       }
     });
     ref.afterClosed().subscribe(confirmed => {

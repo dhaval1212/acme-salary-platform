@@ -1,0 +1,42 @@
+.shell {
+  height: 100vh;
+
+  &__sidenav {
+    width: 220px;
+    background: #1a237e;
+    color: white;
+
+    mat-nav-list a {
+      color: rgba(255, 255, 255, 0.85);
+    }
+  }
+
+  &__logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 16px;
+    font-size: 1rem;
+    font-weight: 500;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+
+    mat-icon, span { color: white; }
+  }
+
+  &__toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  &__main {
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+}
+
+.active-link {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: white !important;
+}

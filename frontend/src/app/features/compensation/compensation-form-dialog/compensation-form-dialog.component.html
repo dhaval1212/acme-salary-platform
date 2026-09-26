@@ -1,0 +1,57 @@
+<h2 mat-dialog-title>Record Compensation — {{ data.employeeName }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" class="form">
+    <mat-form-field appearance="outline" class="form__field">
+      <mat-label>Salary Amount</mat-label>
+      <input matInput formControlName="amount" type="number" placeholder="90000">
+      @if (form.get('amount')?.hasError('required') && form.get('amount')?.touched) {
+        <mat-error>Amount is required</mat-error>
+      }
+      @if (form.get('amount')?.hasError('min') && form.get('amount')?.touched) {
+        <mat-error>Amount must be zero or positive</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form__field">
+      <mat-label>Currency (ISO 4217)</mat-label>
+      <input matInput formControlName="currency" placeholder="USD" maxlength="3">
+      @if (form.get('currency')?.hasError('pattern') && form.get('currency')?.touched) {
+        <mat-error>Must be a 3-letter uppercase code (e.g. USD, GBP, INR)</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form__field">
+      <mat-label>Effective Date</mat-label>
+      <input matInput [matDatepicker]="picker" formControlName="effectiveDate">
+      <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+      @if (form.get('effectiveDate')?.hasError('required') && form.get('effectiveDate')?.touched) {
+        <mat-error>Effective date is required</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form__field">
+      <mat-label>Changed By</mat-label>
+      <input matInput formControlName="changedBy" placeholder="hr-manager@acme.com">
+      @if (form.get('changedBy')?.hasError('required') && form.get('changedBy')?.touched) {
+        <mat-error>Changed by is required</mat-error>
+      }
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="dialogRef.close(false)" [disabled]="saving">Cancel</button>
+  <button mat-flat-button color="primary" (click)="save()" [disabled]="form.invalid || saving">
+    @if (saving) {
+      <mat-spinner diameter="18" style="display:inline-block; margin-right:8px;"></mat-spinner>
+    }
+    Record
+  </button>
+</mat-dialog-actions>
+
+<style>
+  .form { display: flex; flex-direction: column; gap: 4px; min-width: 400px; padding-top: 8px; }
+  .form__field { width: 100%; }
+</style>

@@ -19,9 +19,9 @@ import { EmployeeStatus } from '../../../core/models/employee.model';
       border-radius: 12px;
       font-size: 0.75rem;
       font-weight: 500;
-      &--active  { background: #e8f5e9; color: #2e7d32; }
-      &--inactive { background: #fce4ec; color: #c62828; }
     }
+    .badge--active  { background: #e8f5e9; color: #2e7d32; }
+    .badge--inactive { background: #fce4ec; color: #c62828; }
   `]
 })
 export class StatusBadgeComponent {

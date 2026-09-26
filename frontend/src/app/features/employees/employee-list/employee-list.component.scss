@@ -7,12 +7,16 @@
   align-items: center;
 
   &__search { flex: 1; min-width: 200px; }
+
   mat-form-field { min-width: 160px; }
+
   button { height: 56px; }
 }
 
 .loading-overlay {
-  display: flex; justify-content: center; padding: 40px;
+  display: flex;
+  justify-content: center;
+  padding: 40px;
 }
 
 .full-width { width: 100%; }
