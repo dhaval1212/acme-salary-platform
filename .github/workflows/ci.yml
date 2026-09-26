@@ -51,6 +51,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-report
+          # Path is relative to the repo root, not the working-directory default.
+          # The job's defaults.run.working-directory is 'backend/', but
+          # actions/upload-artifact always resolves from the workspace root.
           path: backend/target/site/jacoco/jacoco.xml
           retention-days: 1
 
@@ -81,7 +84,9 @@ jobs:
           cache: 'maven'
 
       - name: Run integration tests (Docker available on GitHub runners)
-        run: ./mvnw test -Dgroups=integration --batch-mode --no-transfer-progress
+        # Use verify (not test) so Surefire sees both -Dgroups and -DexcludedGroups.
+        # -DexcludedGroups= (empty) ensures no accidental exclusion overrides -Dgroups.
+        run: ./mvnw verify -Dgroups=integration -DexcludedGroups= --batch-mode --no-transfer-progress
 
   # ── 3. Static analysis (SonarCloud) ───────────────────────────────────────
   sonar:

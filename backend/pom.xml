@@ -159,6 +159,28 @@
                 <artifactId>sonar-maven-plugin</artifactId>
                 <version>5.1.0.4751</version>
             </plugin>
+
+            <!-- ── Unit test runner ────────────────────────────────── -->
+            <!--
+                Explicitly configure Surefire so that -Dgroups and
+                -DexcludedGroups CLI flags are honoured for JUnit 5 @Tag
+                filtering.  Without this block, Surefire ignores those
+                system properties entirely.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <!-- version managed by spring-boot-starter-parent -->
+                <configuration>
+                    <!--
+                        Pass through the JUnit Platform tag expressions set
+                        on the CLI.  The defaults (empty string) mean "run
+                        everything" when the property is not supplied.
+                    -->
+                    <groups>${groups}</groups>
+                    <excludedGroups>${excludedGroups}</excludedGroups>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
