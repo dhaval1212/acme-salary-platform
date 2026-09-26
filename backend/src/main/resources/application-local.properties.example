@@ -1,0 +1,8 @@
+# Copy this file to application-local.properties and fill in your local values.
+# application-local.properties is git-ignored and must never be committed.
+
+spring.datasource.url=jdbc:postgresql://localhost:5432/compensation
+spring.datasource.username=compensation
+spring.datasource.password=compensation
+
+spring.liquibase.contexts=local
