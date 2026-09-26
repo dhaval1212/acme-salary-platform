@@ -1,0 +1,101 @@
+@if (loading) {
+  <div class="loading"><mat-spinner diameter="48"></mat-spinner></div>
+}
+
+@if (!loading && employee) {
+  <div class="detail">
+    <div class="detail__header">
+      <button mat-icon-button (click)="goBack()"><mat-icon>arrow_back</mat-icon></button>
+      <app-page-header
+        [title]="employee.fullName"
+        [subtitle]="employee.jobTitle + ' · ' + employee.department"
+        icon="person">
+      </app-page-header>
+    </div>
+
+    <!-- Profile card -->
+    <div class="detail__grid">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Profile</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <dl class="profile">
+            <dt>Email</dt><dd>{{ employee.email }}</dd>
+            <dt>Country</dt><dd>{{ employee.country }}</dd>
+            <dt>Status</dt><dd><app-status-badge [status]="employee.status"></app-status-badge></dd>
+            <dt>Member since</dt><dd>{{ employee.createdAt | date:'mediumDate' }}</dd>
+          </dl>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Current salary card -->
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Current Compensation</mat-card-title>
+          <div class="card-actions">
+            <button mat-stroked-button color="primary" (click)="openCompensationDialog()">
+              <mat-icon>edit</mat-icon> Record Change
+            </button>
+          </div>
+        </mat-card-header>
+        <mat-card-content>
+          @if (currentCompensation) {
+            <div class="salary">
+              <span class="salary__amount">
+                <app-currency-display
+                  [amount]="currentCompensation.amount"
+                  [currencyCode]="currentCompensation.currency">
+                </app-currency-display>
+              </span>
+              <span class="salary__meta">
+                Effective {{ currentCompensation.effectiveDate | date:'mediumDate' }}
+              </span>
+            </div>
+          } @else {
+            <app-empty-state message="No compensation recorded yet" icon="payments"></app-empty-state>
+          }
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Compensation history -->
+    <mat-card class="detail__history">
+      <mat-card-header>
+        <mat-card-title>Compensation History</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (compensationHistory.length === 0) {
+          <app-empty-state message="No history yet" icon="history"></app-empty-state>
+        } @else {
+          <table mat-table [dataSource]="compensationHistory" class="full-width">
+            <ng-container matColumnDef="effectiveDate">
+              <th mat-header-cell *matHeaderCellDef>Effective Date</th>
+              <td mat-cell *matCellDef="let c">{{ c.effectiveDate | date:'mediumDate' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="amount">
+              <th mat-header-cell *matHeaderCellDef>Amount</th>
+              <td mat-cell *matCellDef="let c">
+                <app-currency-display [amount]="c.amount" [currencyCode]="c.currency"></app-currency-display>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="currency">
+              <th mat-header-cell *matHeaderCellDef>Currency</th>
+              <td mat-cell *matCellDef="let c">{{ c.currency }}</td>
+            </ng-container>
+            <ng-container matColumnDef="changedBy">
+              <th mat-header-cell *matHeaderCellDef>Changed By</th>
+              <td mat-cell *matCellDef="let c">{{ c.changedBy }}</td>
+            </ng-container>
+            <ng-container matColumnDef="createdAt">
+              <th mat-header-cell *matHeaderCellDef>Recorded</th>
+              <td mat-cell *matCellDef="let c">{{ c.createdAt | date:'short' }}</td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="historyColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: historyColumns;"></tr>
+          </table>
+        }
+      </mat-card-content>
+    </mat-card>
+  </div>
+}

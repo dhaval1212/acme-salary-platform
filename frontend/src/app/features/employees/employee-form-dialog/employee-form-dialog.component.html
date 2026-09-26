@@ -1,0 +1,61 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Edit Employee' : 'Add Employee' }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" class="form">
+    <mat-form-field appearance="outline" class="form__field">
+      <mat-label>Full Name</mat-label>
+      <input matInput formControlName="fullName" placeholder="Alice Smith">
+      @if (form.get('fullName')?.hasError('required')) {
+        <mat-error>Full name is required</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form__field">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" type="email" placeholder="alice@acme.com">
+      @if (form.get('email')?.hasError('required')) {
+        <mat-error>Email is required</mat-error>
+      }
+      @if (form.get('email')?.hasError('email')) {
+        <mat-error>Must be a valid email address</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form__field">
+      <mat-label>Department</mat-label>
+      <input matInput formControlName="department" placeholder="Engineering">
+      @if (form.get('department')?.hasError('required')) {
+        <mat-error>Department is required</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form__field">
+      <mat-label>Job Title</mat-label>
+      <input matInput formControlName="jobTitle" placeholder="Software Engineer">
+      @if (form.get('jobTitle')?.hasError('required')) {
+        <mat-error>Job title is required</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="form__field">
+      <mat-label>Country</mat-label>
+      <input matInput formControlName="country" placeholder="US">
+      @if (form.get('country')?.hasError('required')) {
+        <mat-error>Country is required</mat-error>
+      }
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="dialogRef.close(false)" [disabled]="saving">Cancel</button>
+  <button mat-flat-button color="primary" (click)="save()" [disabled]="form.invalid || saving">
+    @if (saving) { <mat-spinner diameter="18" style="display:inline-block;margin-right:8px"></mat-spinner> }
+    {{ isEdit ? 'Update' : 'Create' }}
+  </button>
+</mat-dialog-actions>
+
+<style>
+.form { display: flex; flex-direction: column; gap: 4px; min-width: 420px; padding-top: 8px; }
+.form__field { width: 100%; }
+</style>

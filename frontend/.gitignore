@@ -1,39 +1,42 @@
-# ─── Dependencies ────────────────────────────────────────────────────────────
-node_modules/
+# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
-# ─── Build output ────────────────────────────────────────────────────────────
-dist/
-build/
+# Compiled output
+/dist
+/tmp
+/out-tsc
+/bazel-out
 
-# ─── Angular CLI cache ───────────────────────────────────────────────────────
-.angular/
-.cache/
+# Node
+/node_modules
+npm-debug.log
+yarn-error.log
 
-# ─── Test output ─────────────────────────────────────────────────────────────
-coverage/
-junit.xml
-test-results/
-
-# ─── Environment files (generated per machine) ───────────────────────────────
-# Keep src/environments/environment.ts (default)
-# Keep src/environments/environment.prod.ts (production template)
-# Ignore any local override files
-src/environments/environment.local.ts
-
-# ─── Package manager locks (keep only one) ───────────────────────────────────
-# Commit package-lock.json (npm). If using yarn, swap these two lines.
-yarn.lock
-
-# ─── IDE ─────────────────────────────────────────────────────────────────────
+# IDEs and editors
 .idea/
-.vscode/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
 !.vscode/extensions.json
+.history/*
 
-# ─── Logs ────────────────────────────────────────────────────────────────────
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-*.log
+# Miscellaneous
+/.angular/cache
+.sass-cache/
+/connect.lock
+/coverage
+/libpeerconnection.log
+testem.log
+/typings
 
-# ─── macOS ───────────────────────────────────────────────────────────────────
+# System files
 .DS_Store
+Thumbs.db

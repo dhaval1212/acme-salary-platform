@@ -1,0 +1,124 @@
+<app-page-header
+  title="Employees"
+  subtitle="Manage compensation records for all employees"
+  icon="people">
+</app-page-header>
+
+<!-- Filters row -->
+<mat-card class="filters-card">
+  <mat-card-content>
+    <div class="filters">
+      <mat-form-field appearance="outline" class="filters__search">
+        <mat-label>Search by name or email</mat-label>
+        <input matInput [formControl]="searchControl" placeholder="Alice Smith…">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Department</mat-label>
+        <input matInput [formControl]="departmentControl" (blur)="onFilterChange()" placeholder="Engineering">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Country</mat-label>
+        <input matInput [formControl]="countryControl" (blur)="onFilterChange()" placeholder="US">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select [formControl]="statusControl" (selectionChange)="onFilterChange()">
+          <mat-option value="">All</mat-option>
+          <mat-option value="ACTIVE">Active</mat-option>
+          <mat-option value="INACTIVE">Inactive</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-flat-button color="primary" (click)="openCreateDialog()">
+        <mat-icon>add</mat-icon> Add Employee
+      </button>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<!-- Table -->
+<mat-card>
+  <mat-card-content>
+    @if (loading) {
+      <div class="loading-overlay">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+    }
+
+    @if (!loading && employees.length === 0) {
+      <app-empty-state message="No employees found. Try adjusting your filters." icon="people_outline">
+      </app-empty-state>
+    }
+
+    @if (employees.length > 0) {
+      <table mat-table [dataSource]="employees" class="full-width">
+
+        <ng-container matColumnDef="fullName">
+          <th mat-header-cell *matHeaderCellDef>Name</th>
+          <td mat-cell *matCellDef="let e">
+            <strong>{{ e.fullName }}</strong>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef>Email</th>
+          <td mat-cell *matCellDef="let e">{{ e.email }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="department">
+          <th mat-header-cell *matHeaderCellDef>Department</th>
+          <td mat-cell *matCellDef="let e">{{ e.department }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="jobTitle">
+          <th mat-header-cell *matHeaderCellDef>Job Title</th>
+          <td mat-cell *matCellDef="let e">{{ e.jobTitle }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="country">
+          <th mat-header-cell *matHeaderCellDef>Country</th>
+          <td mat-cell *matCellDef="let e">{{ e.country }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let e">
+            <app-status-badge [status]="e.status"></app-status-badge>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let e">
+            <button mat-icon-button matTooltip="View details" (click)="viewDetail(e.id)">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button mat-icon-button matTooltip="Edit" (click)="openEditDialog(e)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            @if (e.status === 'ACTIVE') {
+              <button mat-icon-button matTooltip="Deactivate" color="warn" (click)="deactivate(e)">
+                <mat-icon>person_off</mat-icon>
+              </button>
+            }
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="row-hover"></tr>
+      </table>
+
+      <mat-paginator
+        [length]="pageMeta.totalElements"
+        [pageSize]="pageMeta.pageSize"
+        [pageSizeOptions]="[10, 20, 50]"
+        (page)="onPageChange($event)"
+        showFirstLastButtons>
+      </mat-paginator>
+    }
+  </mat-card-content>
+</mat-card>
