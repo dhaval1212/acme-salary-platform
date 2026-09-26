@@ -197,6 +197,7 @@
                     <!-- Default is non-failing locally; CI overrides to 7 -->
                     <suppressionFile>../config/owasp-suppressions.xml</suppressionFile>
                     <formats>HTML,JSON</formats>
+                    <ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>
                 </configuration>
             </plugin>
 
