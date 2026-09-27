@@ -1,99 +1,113 @@
 name: Remote Direct EC2 Build & Deploy
 
 # ── Triggers ────────────────────────────────────────────────────────────────
-# Fires when EITHER the backend CI or frontend CI workflow completes on main.
-# The job checks that BOTH have succeeded for the same commit before deploying.
+# Fires on push to main — but only when deployment-relevant files change.
+# Docs, config, and markdown-only pushes do not trigger a deploy.
 on:
-  workflow_run:
-    workflows: ["CI", "Frontend CI"]
-    types: [completed]
+  push:
     branches: [main]
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "docker-compose.yml"
+      - ".env.example"
+      - ".github/workflows/**"
 
 jobs:
+  # ── Job 1: Wait for both CI pipelines to complete ─────────────────────────
+  # The backend CI ("CI") and frontend CI ("Frontend CI") run in parallel on
+  # every push to main. This job polls the GitHub API until both have completed
+  # for this exact commit SHA, then fails if either did not succeed.
+  # The deploy job only starts after this gate job succeeds.
+  wait-for-ci:
+    name: Wait for Backend & Frontend CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 40   # hard timeout — prevents hanging forever if CI is stuck
+
+    steps:
+      - name: Poll until both CI workflows complete for this commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_SHA: ${{ github.sha }}
+          POLL_INTERVAL: "20"      # seconds between API polls
+          MAX_WAIT: "2100"         # 35 minutes in seconds
+        run: |
+          # ── Helper: wait for a named workflow to complete ────────────────
+          wait_for_workflow() {
+            local WORKFLOW_NAME="$1"
+            local RUN_ID=""
+            local ELAPSED=0
+
+            echo "──────────────────────────────────────────"
+            echo "Waiting for: $WORKFLOW_NAME"
+            echo "Commit:      $COMMIT_SHA"
+            echo "──────────────────────────────────────────"
+
+            # Phase 1: Wait for the run to appear in the API
+            # (There is a brief delay between a push and the run being created)
+            until [ -n "$RUN_ID" ]; do
+              RUN_ID=$(gh api \
+                "repos/${{ github.repository }}/actions/runs" \
+                --jq ".workflow_runs[] | select(.name == \"$WORKFLOW_NAME\" and .head_sha == \"$COMMIT_SHA\") | .id" \
+                | head -1)
+
+              if [ -z "$RUN_ID" ]; then
+                if [ "$ELAPSED" -ge "$MAX_WAIT" ]; then
+                  echo "::error::Timed out waiting for '$WORKFLOW_NAME' to appear after ${MAX_WAIT}s."
+                  exit 1
+                fi
+                echo "[$ELAPSED s] '$WORKFLOW_NAME' run not yet created — waiting ${POLL_INTERVAL}s..."
+                sleep "$POLL_INTERVAL"
+                ELAPSED=$((ELAPSED + POLL_INTERVAL))
+              fi
+            done
+
+            echo "[$ELAPSED s] Found '$WORKFLOW_NAME' run ID: $RUN_ID"
+
+            # Phase 2: Poll until the run reaches a terminal status
+            while true; do
+              RUN_DATA=$(gh api "repos/${{ github.repository }}/actions/runs/$RUN_ID" \
+                --jq '{status: .status, conclusion: .conclusion}')
+              STATUS=$(echo "$RUN_DATA" | jq -r '.status')
+              CONCLUSION=$(echo "$RUN_DATA" | jq -r '.conclusion')
+
+              if [ "$STATUS" = "completed" ]; then
+                echo "[$ELAPSED s] '$WORKFLOW_NAME' completed — conclusion: $CONCLUSION"
+                if [ "$CONCLUSION" != "success" ]; then
+                  echo "::error::'$WORKFLOW_NAME' did not succeed (conclusion: $CONCLUSION). Aborting deploy."
+                  exit 1
+                fi
+                echo "'$WORKFLOW_NAME' ✓ success"
+                return 0
+              fi
+
+              if [ "$ELAPSED" -ge "$MAX_WAIT" ]; then
+                echo "::error::Timed out waiting for '$WORKFLOW_NAME' to complete after ${MAX_WAIT}s (status: $STATUS)."
+                exit 1
+              fi
+
+              echo "[$ELAPSED s] '$WORKFLOW_NAME' status: $STATUS — waiting ${POLL_INTERVAL}s..."
+              sleep "$POLL_INTERVAL"
+              ELAPSED=$((ELAPSED + POLL_INTERVAL))
+            done
+          }
+
+          # ── Wait for backend CI, then frontend CI ────────────────────────
+          wait_for_workflow "CI"
+          wait_for_workflow "Frontend CI"
+
+          echo ""
+          echo "✓ Both CI pipelines succeeded for commit $COMMIT_SHA. Proceeding to deploy."
+
+  # ── Job 2: Deploy to EC2 ──────────────────────────────────────────────────
+  # Only starts after wait-for-ci succeeds (i.e., both CI pipelines passed).
   deploy:
     name: Deploy to EC2
     runs-on: ubuntu-latest
-
-    # ── Gate 1: The triggering workflow must have succeeded ──────────────────
-    if: github.event.workflow_run.conclusion == 'success'
+    needs: [wait-for-ci]
 
     steps:
-      # ── Gate 2: Verify the OTHER CI workflow also succeeded ─────────────────
-      # workflow_run fires for either CI or Frontend CI individually.
-      # We use the GitHub API to confirm the sibling workflow also passed
-      # on the same commit SHA before we proceed with the deploy.
-      - name: Check both CI workflows have passed
-        id: both-ci
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
-          TRIGGERING_WORKFLOW: ${{ github.event.workflow_run.name }}
-        run: |
-          echo "Triggered by: $TRIGGERING_WORKFLOW"
-          echo "Commit SHA:   $COMMIT_SHA"
-
-          # Determine which workflow we need to verify (the one that did NOT trigger this run)
-          if [ "$TRIGGERING_WORKFLOW" = "CI" ]; then
-            SIBLING="Frontend CI"
-          else
-            SIBLING="CI"
-          fi
-          echo "Checking sibling workflow: $SIBLING"
-
-          # Query the GitHub API for the most recent run of the sibling workflow on this SHA
-          SIBLING_CONCLUSION=$(gh api \
-            "repos/${{ github.repository }}/actions/runs" \
-            --jq ".workflow_runs[] | select(.name == \"$SIBLING\" and .head_sha == \"$COMMIT_SHA\") | .conclusion" \
-            | head -1)
-
-          echo "Sibling conclusion: $SIBLING_CONCLUSION"
-
-          if [ "$SIBLING_CONCLUSION" != "success" ]; then
-            echo "::notice::Sibling workflow '$SIBLING' has not succeeded yet (status: $SIBLING_CONCLUSION). Skipping deploy."
-            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "Both CI and Frontend CI succeeded. Proceeding with deploy."
-            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      # ── Gate 3: Skip deploy if only non-deployable files changed ────────────
-      # Changes to docs/, *.md, or config/ do not require a new deployment.
-      # We inspect the files changed in the commit and bail early if nothing
-      # deployment-relevant was touched.
-      - name: Check if deployable files changed
-        id: file-changes
-        if: steps.both-ci.outputs.should_deploy == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
-        run: |
-          # Fetch the list of files changed in this commit
-          CHANGED_FILES=$(gh api \
-            "repos/${{ github.repository }}/commits/$COMMIT_SHA" \
-            --jq '[.files[].filename] | join("\n")')
-
-          echo "Changed files:"
-          echo "$CHANGED_FILES"
-
-          # Paths that DO require a redeploy (backend, frontend, docker config)
-          DEPLOYABLE=$(echo "$CHANGED_FILES" | grep -E \
-            '^(backend/|frontend/|docker-compose\.yml|\.env\.example|\.github/workflows/)' \
-            | grep -v '__pycache__' || true)
-
-          if [ -z "$DEPLOYABLE" ]; then
-            echo "::notice::No deployment-relevant files changed (docs/config only). Skipping deploy."
-            echo "needs_deploy=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "Deployment-relevant changes detected:"
-            echo "$DEPLOYABLE"
-            echo "needs_deploy=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      # ── Deploy ───────────────────────────────────────────────────────────────
       - name: SSH and Deploy on EC2
-        if: |
-          steps.both-ci.outputs.should_deploy == 'true' &&
-          steps.file-changes.outputs.needs_deploy == 'true'
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
