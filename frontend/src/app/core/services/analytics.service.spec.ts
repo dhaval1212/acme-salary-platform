@@ -5,8 +5,8 @@ import { ApiService } from './api.service';
 import { DepartmentStats } from '../models/analytics.model';
 
 const MOCK_STATS: DepartmentStats[] = [
-  { department: 'Engineering', headcount: 10, avgSalary: 100000, medianSalary: 98000, minSalary: 75000, maxSalary: 130000 },
-  { department: 'HR',          headcount: 3,  avgSalary: 65000,  medianSalary: 63000, minSalary: 55000, maxSalary: 70000  }
+  { department: 'Engineering', country: 'United States', currency: 'USD', headcount: 10, avgSalary: 100000, medianSalary: 98000, minSalary: 75000, maxSalary: 130000 },
+  { department: 'HR',          country: 'United States', currency: 'USD', headcount: 3,  avgSalary: 65000,  medianSalary: 63000, minSalary: 55000, maxSalary: 70000  }
 ];
 
 describe('AnalyticsService', () => {

@@ -8,8 +8,8 @@ import { AnalyticsService } from '../../../core/services/analytics.service';
 import { DepartmentStats } from '../../../core/models/analytics.model';
 
 const MOCK_STATS: DepartmentStats[] = [
-  { department: 'Engineering', headcount: 10, avgSalary: 100000, medianSalary: 95000, minSalary: 70000, maxSalary: 140000 },
-  { department: 'Design',      headcount: 5,  avgSalary: 70000,  medianSalary: 68000, minSalary: 50000, maxSalary: 85000  },
+  { department: 'Engineering', country: 'United States', currency: 'USD', headcount: 10, avgSalary: 100000, medianSalary: 95000, minSalary: 70000, maxSalary: 140000 },
+  { department: 'Design',      country: 'United States', currency: 'USD', headcount: 5,  avgSalary: 70000,  medianSalary: 68000, minSalary: 50000, maxSalary: 85000  },
 ];
 
 describe('AnalyticsDashboardComponent', () => {
@@ -39,18 +39,25 @@ describe('AnalyticsDashboardComponent', () => {
   });
 
   describe('initialisation', () => {
-    it('loads department stats on init', () => {
+    it('loads department stats on init with default United States country', () => {
       expect(analyticsServiceSpy.getDepartmentStats).toHaveBeenCalledWith({
         department: undefined,
-        country: undefined
+        country: 'United States'
       });
       expect(component.stats).toEqual(MOCK_STATS);
       expect(component.loading).toBeFalse();
     });
 
-    it('renders the stats table columns', () => {
+    it('renders the stats table columns for a selected country', () => {
       expect(component.displayedColumns).toEqual([
-        'department', 'headcount', 'avgSalary', 'medianSalary', 'minSalary', 'maxSalary'
+        'department', 'currency', 'headcount', 'avgSalary', 'medianSalary', 'minSalary', 'maxSalary'
+      ]);
+    });
+
+    it('renders country column when country selection is cleared for country-wise view', () => {
+      component.countryControl.setValue('');
+      expect(component.displayedColumns).toEqual([
+        'department', 'country', 'currency', 'headcount', 'avgSalary', 'medianSalary', 'minSalary', 'maxSalary'
       ]);
     });
   });
@@ -58,13 +65,13 @@ describe('AnalyticsDashboardComponent', () => {
   describe('filters', () => {
     it('passes department and country values when loading stats', () => {
       component.departmentControl.setValue('Engineering');
-      component.countryControl.setValue('US');
+      component.countryControl.setValue('United Kingdom');
 
       component.load();
 
       expect(analyticsServiceSpy.getDepartmentStats).toHaveBeenCalledWith({
         department: 'Engineering',
-        country: 'US'
+        country: 'United Kingdom'
       });
     });
 
@@ -78,6 +85,17 @@ describe('AnalyticsDashboardComponent', () => {
         department: undefined,
         country: undefined
       });
+    });
+
+    it('determines activeCurrency from selected country or stats', () => {
+      component.countryControl.setValue('United Kingdom');
+      expect(component.activeCurrency).toBe('GBP');
+
+      component.countryControl.setValue('India');
+      expect(component.activeCurrency).toBe('INR');
+
+      component.countryControl.setValue('');
+      expect(component.activeCurrency).toBe('USD');
     });
   });
 
@@ -107,10 +125,19 @@ describe('AnalyticsDashboardComponent', () => {
       expect(component.totalHeadcount).toBe(0);
     });
 
-    it('calculates weighted overallAvgSalary correctly', () => {
-      // Weighted average: (10 * 100,000 + 5 * 70,000) / (10 + 5)
-      // = (1,000,000 + 350,000) / 15 = 1,350,000 / 15 = 90,000
+    it('calculates weighted overallAvgSalary correctly for single currency', () => {
+      // Weighted average: (10 * 100,000 + 5 * 70,000) / (10 + 5) = 90,000
+      expect(component.hasMultipleCurrencies).toBeFalse();
       expect(component.overallAvgSalary).toBe(90000);
+    });
+
+    it('never accumulates multi-currency data into overall average and flags hasMultipleCurrencies', () => {
+      component.stats = [
+        { department: 'Engineering', country: 'United States', currency: 'USD', headcount: 10, avgSalary: 100000, medianSalary: 95000, minSalary: 70000, maxSalary: 140000 },
+        { department: 'Engineering', country: 'India', currency: 'INR', headcount: 10, avgSalary: 2500000, medianSalary: 2300000, minSalary: 800000, maxSalary: 6000000 },
+      ];
+      expect(component.hasMultipleCurrencies).toBeTrue();
+      expect(component.overallAvgSalary).toBe(0);
     });
 
     it('returns overallAvgSalary 0 when stats array is empty to prevent division by zero', () => {

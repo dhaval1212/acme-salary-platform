@@ -16,16 +16,21 @@
     <mat-card class="summary-card">
       <mat-card-content>
         <div class="summary-card__value">{{ stats.length }}</div>
-        <div class="summary-card__label">Departments</div>
+        <div class="summary-card__label">{{ countryControl.value ? 'Departments' : 'Breakdown Rows' }}</div>
       </mat-card-content>
     </mat-card>
     <mat-card class="summary-card">
       <mat-card-content>
-        <div class="summary-card__value">
-          <app-currency-display [amount]="overallAvgSalary" currencyCode="USD">
-          </app-currency-display>
-        </div>
-        <div class="summary-card__label">Org Avg Salary</div>
+        @if (hasMultipleCurrencies) {
+          <div class="summary-card__value summary-card__value--notice">Multi-Currency</div>
+          <div class="summary-card__label">Select country for Org Avg</div>
+        } @else {
+          <div class="summary-card__value">
+            <app-currency-display [amount]="overallAvgSalary" [currencyCode]="activeCurrency">
+            </app-currency-display>
+          </div>
+          <div class="summary-card__label">Org Avg Salary ({{ activeCurrency }})</div>
+        }
       </mat-card-content>
     </mat-card>
   </div>
@@ -36,12 +41,17 @@
   <mat-card-content>
     <div class="filters">
       <mat-form-field appearance="outline">
-        <mat-label>Department</mat-label>
-        <input matInput [formControl]="departmentControl" placeholder="Engineering">
+        <mat-label>Country</mat-label>
+        <mat-select [formControl]="countryControl" (selectionChange)="load()">
+          <mat-option value="">All Countries (Country-wise)</mat-option>
+          @for (c of countries; track c.code) {
+            <mat-option [value]="c.name">{{ c.name }} ({{ c.currency }})</mat-option>
+          }
+        </mat-select>
       </mat-form-field>
       <mat-form-field appearance="outline">
-        <mat-label>Country</mat-label>
-        <input matInput [formControl]="countryControl" placeholder="US">
+        <mat-label>Department</mat-label>
+        <input matInput [formControl]="departmentControl" placeholder="Engineering">
       </mat-form-field>
       <button mat-flat-button color="primary" (click)="load()">
         <mat-icon>refresh</mat-icon> Apply
@@ -66,6 +76,18 @@
           <td mat-cell *matCellDef="let s"><strong>{{ s.department }}</strong></td>
         </ng-container>
 
+        <ng-container matColumnDef="country">
+          <th mat-header-cell *matHeaderCellDef>Country</th>
+          <td mat-cell *matCellDef="let s">{{ s.country }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="currency">
+          <th mat-header-cell *matHeaderCellDef>Currency</th>
+          <td mat-cell *matCellDef="let s">
+            <span class="currency-tag">{{ s.currency }}</span>
+          </td>
+        </ng-container>
+
         <ng-container matColumnDef="headcount">
           <th mat-header-cell *matHeaderCellDef>Headcount</th>
           <td mat-cell *matCellDef="let s">{{ s.headcount | number }}</td>
@@ -74,7 +96,7 @@
         <ng-container matColumnDef="avgSalary">
           <th mat-header-cell *matHeaderCellDef>Avg Salary</th>
           <td mat-cell *matCellDef="let s">
-            <app-currency-display [amount]="s.avgSalary" currencyCode="USD">
+            <app-currency-display [amount]="s.avgSalary" [currencyCode]="s.currency || activeCurrency">
             </app-currency-display>
           </td>
         </ng-container>
@@ -82,7 +104,7 @@
         <ng-container matColumnDef="medianSalary">
           <th mat-header-cell *matHeaderCellDef>Median</th>
           <td mat-cell *matCellDef="let s">
-            <app-currency-display [amount]="s.medianSalary" currencyCode="USD">
+            <app-currency-display [amount]="s.medianSalary" [currencyCode]="s.currency || activeCurrency">
             </app-currency-display>
           </td>
         </ng-container>
@@ -90,7 +112,7 @@
         <ng-container matColumnDef="minSalary">
           <th mat-header-cell *matHeaderCellDef>Min</th>
           <td mat-cell *matCellDef="let s">
-            <app-currency-display [amount]="s.minSalary" currencyCode="USD">
+            <app-currency-display [amount]="s.minSalary" [currencyCode]="s.currency || activeCurrency">
             </app-currency-display>
           </td>
         </ng-container>
@@ -98,7 +120,7 @@
         <ng-container matColumnDef="maxSalary">
           <th mat-header-cell *matHeaderCellDef>Max</th>
           <td mat-cell *matCellDef="let s">
-            <app-currency-display [amount]="s.maxSalary" currencyCode="USD">
+            <app-currency-display [amount]="s.maxSalary" [currencyCode]="s.currency || activeCurrency">
             </app-currency-display>
           </td>
         </ng-container>
