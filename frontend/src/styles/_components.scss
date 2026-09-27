@@ -95,6 +95,16 @@ body {
   border-bottom: 1px solid var(--color-border) !important;
   font-size: var(--font-size-sm) !important;
   padding: 14px 16px !important;
+
+  &.mat-column-actions {
+    white-space: nowrap !important;
+    text-align: right !important;
+  }
+}
+
+.mat-mdc-header-cell.mat-column-actions {
+  white-space: nowrap !important;
+  text-align: right !important;
 }
 
 .mat-mdc-row {

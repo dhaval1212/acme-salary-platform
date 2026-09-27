@@ -39,8 +39,36 @@
   width: 100%;
 }
 
+.actions-cell,
+.actions-header,
+.mat-column-actions {
+  width: 136px;
+  min-width: 136px;
+  text-align: right;
+  white-space: nowrap;
+  padding: 6px 12px !important;
+}
+
 .action-buttons {
-  display: flex;
-  gap: 2px;
+  display: inline-flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
   justify-content: flex-end;
+  white-space: nowrap;
+  gap: 2px;
+
+  button.mat-mdc-icon-button {
+    width: 36px;
+    height: 36px;
+    padding: 6px;
+    flex-shrink: 0;
+
+    .mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      line-height: 20px;
+    }
+  }
 }
