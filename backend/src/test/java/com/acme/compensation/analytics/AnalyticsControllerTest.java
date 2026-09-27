@@ -51,7 +51,7 @@ class AnalyticsControllerTest {
     }
 
     private DepartmentStats engineeringStats() {
-        return new DepartmentStats("Engineering", 10L,
+        return new DepartmentStats("Engineering", "United States", "USD", 10L,
                 new BigDecimal("100000.00"), new BigDecimal("98000.00"),
                 new BigDecimal("75000.00"), new BigDecimal("130000.00"));
     }
@@ -129,7 +129,7 @@ class AnalyticsControllerTest {
         @Test
         @DisplayName("returns stats for multiple departments")
         void returnsMultipleDepartments() throws Exception {
-            DepartmentStats hrStats = new DepartmentStats("HR", 3L,
+            DepartmentStats hrStats = new DepartmentStats("HR", "United Kingdom", "GBP", 3L,
                     new BigDecimal("65000.00"), new BigDecimal("63000.00"),
                     new BigDecimal("55000.00"), new BigDecimal("70000.00"));
             given(service.getDepartmentStats(null, null))
@@ -139,7 +139,11 @@ class AnalyticsControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.data.length()").value(2))
                     .andExpect(jsonPath("$.data[0].department").value("Engineering"))
-                    .andExpect(jsonPath("$.data[1].department").value("HR"));
+                    .andExpect(jsonPath("$.data[0].country").value("United States"))
+                    .andExpect(jsonPath("$.data[0].currency").value("USD"))
+                    .andExpect(jsonPath("$.data[1].department").value("HR"))
+                    .andExpect(jsonPath("$.data[1].country").value("United Kingdom"))
+                    .andExpect(jsonPath("$.data[1].currency").value("GBP"));
         }
 
         @Test

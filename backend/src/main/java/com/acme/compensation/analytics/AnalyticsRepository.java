@@ -16,12 +16,16 @@ import java.util.UUID;
 public interface AnalyticsRepository extends Repository<Employee, UUID> {
 
     /**
-     * Per-department salary statistics for active employees.
+     * Per-department and country salary statistics for active employees.
      * Filters by department and country if provided (null = no filter).
+     * When country is not provided, results are grouped by department and country
+     * so that salary amounts in different currencies are never mixed.
      */
     @Query(value = """
             SELECT
                 e.department,
+                e.country,
+                c.currency,
                 COUNT(*)                                                            AS headcount,
                 ROUND(AVG(c.amount)::NUMERIC, 2)                                   AS avg_salary,
                 ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY c.amount)::NUMERIC, 2)
@@ -31,7 +35,7 @@ public interface AnalyticsRepository extends Repository<Employee, UUID> {
             FROM employees e
             JOIN (
                 SELECT DISTINCT ON (employee_id)
-                    employee_id, amount
+                    employee_id, amount, currency
                 FROM compensation_history
                 WHERE effective_date <= :asOf
                 ORDER BY employee_id, effective_date DESC
@@ -39,8 +43,8 @@ public interface AnalyticsRepository extends Repository<Employee, UUID> {
             WHERE e.status = 'active'
               AND (:department IS NULL OR e.department = :department)
               AND (:country    IS NULL OR e.country    = :country)
-            GROUP BY e.department
-            ORDER BY e.department
+            GROUP BY e.department, e.country, c.currency
+            ORDER BY e.department, e.country
             """, nativeQuery = true)
     List<Object[]> findDepartmentStatsRaw(
             @Param("asOf") LocalDate asOf,

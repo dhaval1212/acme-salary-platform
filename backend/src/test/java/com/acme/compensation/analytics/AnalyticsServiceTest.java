@@ -43,6 +43,8 @@ class AnalyticsServiceTest {
         void mapsRowsCorrectly() {
             Object[] row = new Object[]{
                     "Engineering",
+                    "United States",
+                    "USD",
                     5L,
                     new BigDecimal("95000.00"),
                     new BigDecimal("92000.00"),
@@ -59,6 +61,8 @@ class AnalyticsServiceTest {
             assertThat(result).hasSize(1);
             DepartmentStats stats = result.get(0);
             assertThat(stats.department()).isEqualTo("Engineering");
+            assertThat(stats.country()).isEqualTo("United States");
+            assertThat(stats.currency()).isEqualTo("USD");
             assertThat(stats.headcount()).isEqualTo(5L);
             assertThat(stats.avgSalary()).isEqualByComparingTo("95000.00");
             assertThat(stats.medianSalary()).isEqualByComparingTo("92000.00");
@@ -105,7 +109,7 @@ class AnalyticsServiceTest {
         @Test
         @DisplayName("handles null salary fields gracefully — defaults to zero")
         void handlesNullAmountFields() {
-            Object[] rowWithNulls = new Object[]{"HR", 2L, null, null, null, null};
+            Object[] rowWithNulls = new Object[]{"HR", "United States", "USD", 2L, null, null, null, null};
             ArrayList<Object[]> rows = new ArrayList<>();
             rows.add(rowWithNulls);
             given(repository.findDepartmentStatsRaw(any(), any(), any()))
@@ -121,10 +125,10 @@ class AnalyticsServiceTest {
         @Test
         @DisplayName("maps multiple department rows correctly")
         void mapsMultipleRows() {
-            Object[] eng = {"Engineering", 10L,
+            Object[] eng = {"Engineering", "United States", "USD", 10L,
                     new BigDecimal("100000.00"), new BigDecimal("98000.00"),
                     new BigDecimal("75000.00"), new BigDecimal("130000.00")};
-            Object[] hr = {"HR", 3L,
+            Object[] hr = {"HR", "United Kingdom", "GBP", 3L,
                     new BigDecimal("65000.00"), new BigDecimal("63000.00"),
                     new BigDecimal("55000.00"), new BigDecimal("70000.00")};
             List<Object[]> rows = new java.util.ArrayList<>();
@@ -138,6 +142,10 @@ class AnalyticsServiceTest {
             assertThat(result).hasSize(2);
             assertThat(result).extracting(DepartmentStats::department)
                     .containsExactly("Engineering", "HR");
+            assertThat(result).extracting(DepartmentStats::country)
+                    .containsExactly("United States", "United Kingdom");
+            assertThat(result).extracting(DepartmentStats::currency)
+                    .containsExactly("USD", "GBP");
             assertThat(result).extracting(DepartmentStats::headcount)
                     .containsExactly(10L, 3L);
         }
