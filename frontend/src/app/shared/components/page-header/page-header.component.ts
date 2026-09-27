@@ -8,7 +8,9 @@ import { NgIf } from '@angular/common';
   imports: [MatIconModule, NgIf],
   template: `
     <div class="page-header">
-      <mat-icon class="page-header__icon">{{ icon }}</mat-icon>
+      <div class="page-header__icon-wrapper">
+        <mat-icon class="page-header__icon">{{ icon }}</mat-icon>
+      </div>
       <div>
         <h1 class="page-header__title">{{ title }}</h1>
         <p class="page-header__subtitle" *ngIf="subtitle">{{ subtitle }}</p>
@@ -19,24 +21,38 @@ import { NgIf } from '@angular/common';
     .page-header {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
       margin-bottom: 24px;
     }
+    .page-header__icon-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      background: var(--color-primary-subtle);
+      border: 1px solid var(--color-border);
+      flex-shrink: 0;
+    }
     .page-header__icon {
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
-      color: #3f51b5;
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      color: var(--color-primary);
     }
     .page-header__title {
       margin: 0;
-      font-size: 1.5rem;
-      font-weight: 500;
+      font-size: var(--font-size-2xl);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-primary);
+      letter-spacing: -0.02em;
+      line-height: var(--line-height-tight);
     }
     .page-header__subtitle {
       margin: 4px 0 0;
-      color: #666;
-      font-size: 0.875rem;
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-sm);
     }
   `]
 })

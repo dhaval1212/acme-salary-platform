@@ -1,42 +1,158 @@
 .shell {
   height: 100vh;
+  background-color: var(--color-bg);
 
   &__sidenav {
-    width: 220px;
-    background: #1a237e;
-    color: white;
+    width: 240px;
+    background: var(--color-sidebar-bg) !important;
+    color: var(--color-sidebar-text);
+    border-right: 1px solid var(--color-sidebar-border);
+    display: flex;
+    flex-direction: column;
 
-    mat-nav-list a {
-      color: rgba(255, 255, 255, 0.85);
+    // Override Material MDC variables for the entire sidenav list
+    --mdc-list-list-item-label-text-color: var(--color-sidebar-text);
+    --mdc-list-list-item-leading-icon-color: var(--color-sidebar-text-muted);
+
+    .mat-mdc-list-item {
+      border-radius: var(--radius-sm);
+      margin: 4px 10px;
+      height: 44px;
+      color: var(--color-sidebar-text) !important;
+      transition: background-color var(--transition-fast), color var(--transition-fast);
+
+      // Force explicit white/light text and icon colors through MDC internal selectors
+      .mdc-list-item__primary-text,
+      .mat-mdc-list-item-title,
+      .mdc-list-item__content {
+        color: var(--color-sidebar-text) !important;
+        font-size: var(--font-size-sm);
+        font-weight: var(--font-weight-medium);
+        letter-spacing: 0.01em;
+      }
+
+      .mat-icon,
+      .mat-mdc-list-item-icon,
+      .mdc-list-item__start {
+        color: var(--color-sidebar-text-muted) !important;
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.08) !important;
+
+        .mdc-list-item__primary-text,
+        .mat-mdc-list-item-title,
+        .mat-icon,
+        .mat-mdc-list-item-icon,
+        .mdc-list-item__start {
+          color: #ffffff !important;
+        }
+      }
+
+      &.active-link {
+        background: var(--color-sidebar-active-bg) !important;
+        border-left: 3px solid var(--color-primary);
+
+        .mdc-list-item__primary-text,
+        .mat-mdc-list-item-title {
+          color: #ffffff !important;
+          font-weight: var(--font-weight-semibold);
+        }
+
+        .mat-icon,
+        .mat-mdc-list-item-icon,
+        .mdc-list-item__start {
+          color: #60a5fa !important;
+        }
+      }
     }
   }
 
   &__logo {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 20px 16px;
-    font-size: 1rem;
-    font-weight: 500;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    gap: 12px;
+    padding: 20px 18px;
+    border-bottom: 1px solid var(--color-sidebar-border);
 
-    mat-icon, span { color: white; }
+    &-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background: var(--color-primary);
+      color: #ffffff;
+      border-radius: var(--radius-sm);
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        color: #ffffff !important;
+      }
+    }
+
+    &-text {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+
+  &__brand {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.05em;
+    color: #ffffff;
+  }
+
+  &__product {
+    font-size: var(--font-size-xs);
+    color: var(--color-sidebar-text-muted);
+  }
+
+  &__nav-list {
+    padding-top: 12px;
+  }
+
+  &__content {
+    background-color: var(--color-bg);
   }
 
   &__toolbar {
     position: sticky;
     top: 0;
     z-index: 10;
+    height: 56px;
+    background: var(--color-toolbar-bg) !important;
+    color: var(--color-toolbar-text) !important;
+    border-bottom: 1px solid var(--color-toolbar-border);
+    box-shadow: var(--shadow-sm);
+    padding: 0 24px;
+  }
+
+  &__title {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: -0.01em;
+  }
+
+  &__spacer {
+    flex: 1 1 auto;
+  }
+
+  &__theme-btn {
+    color: var(--color-text-secondary);
+
+    &:hover {
+      color: var(--color-text-primary);
+      background-color: var(--color-surface-hover);
+    }
   }
 
   &__main {
     padding: 24px;
-    max-width: 1200px;
+    max-width: 1240px;
     margin: 0 auto;
   }
-}
-
-.active-link {
-  background: rgba(255, 255, 255, 0.15) !important;
-  color: white !important;
 }

@@ -2,10 +2,12 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { ShellComponent } from './shell.component';
+import { ThemeService } from '../../core/services/theme.service';
 
 describe('ShellComponent', () => {
   let fixture: ComponentFixture<ShellComponent>;
   let component: ShellComponent;
+  let themeService: ThemeService;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -18,6 +20,7 @@ describe('ShellComponent', () => {
 
     fixture = TestBed.createComponent(ShellComponent);
     component = fixture.componentInstance;
+    themeService = TestBed.inject(ThemeService);
     fixture.detectChanges();
   });
 
@@ -45,5 +48,11 @@ describe('ShellComponent', () => {
   it('renders router-outlet for feature views', () => {
     const outlet = fixture.nativeElement.querySelector('router-outlet');
     expect(outlet).toBeTruthy();
+  });
+
+  it('provides theme toggle access via themeService', () => {
+    expect(component.themeService).toBe(themeService);
+    const btn = fixture.nativeElement.querySelector('.shell__theme-btn');
+    expect(btn).toBeTruthy();
   });
 });

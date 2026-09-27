@@ -1,14 +1,20 @@
 <mat-sidenav-container class="shell">
   <mat-sidenav mode="side" opened class="shell__sidenav">
     <div class="shell__logo">
-      <mat-icon>account_balance</mat-icon>
-      <span>ACME Comp Hub</span>
+      <div class="shell__logo-icon">
+        <mat-icon>account_balance</mat-icon>
+      </div>
+      <div class="shell__logo-text">
+        <span class="shell__brand">ACME</span>
+        <span class="shell__product">Compensation Hub</span>
+      </div>
     </div>
-    <mat-nav-list>
+    <mat-nav-list class="shell__nav-list">
       @for (item of navItems; track item.route) {
         <a mat-list-item
            [routerLink]="item.route"
-           routerLinkActive="active-link">
+           routerLinkActive="active-link"
+           class="shell__nav-item">
           <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
           <span matListItemTitle>{{ item.label }}</span>
         </a>
@@ -17,8 +23,32 @@
   </mat-sidenav>
 
   <mat-sidenav-content class="shell__content">
-    <mat-toolbar color="primary" class="shell__toolbar">
-      <span>ACME Compensation Hub</span>
+    <mat-toolbar class="shell__toolbar">
+      <span class="shell__title">ACME Compensation Hub</span>
+      <span class="shell__spacer"></span>
+
+      <button mat-icon-button
+              [matMenuTriggerFor]="themeMenu"
+              aria-label="Toggle theme appearance"
+              matTooltip="Appearance theme"
+              class="shell__theme-btn">
+        <mat-icon>{{ themeService.isDark() ? 'dark_mode' : 'light_mode' }}</mat-icon>
+      </button>
+
+      <mat-menu #themeMenu="matMenu" xPosition="before" class="theme-menu">
+        <button mat-menu-item (click)="themeService.setTheme('light')">
+          <mat-icon>light_mode</mat-icon>
+          <span>Light theme</span>
+        </button>
+        <button mat-menu-item (click)="themeService.setTheme('dark')">
+          <mat-icon>dark_mode</mat-icon>
+          <span>Dark theme</span>
+        </button>
+        <button mat-menu-item (click)="themeService.setTheme('system')">
+          <mat-icon>settings_brightness</mat-icon>
+          <span>System default</span>
+        </button>
+      </mat-menu>
     </mat-toolbar>
     <main class="shell__main">
       <router-outlet />

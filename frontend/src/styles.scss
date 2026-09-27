@@ -1,16 +1,33 @@
+@use 'styles/tokens';
+@use 'styles/components';
+
 html, body {
   height: 100%;
   margin: 0;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
 }
 
-// Consistent table row hover across all pages
-.row-hover:hover { background-color: rgba(0, 0, 0, 0.04); }
+* {
+  box-sizing: border-box;
+}
 
-// Sticky table headers always on white background
-.mat-mdc-header-row {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  background: white;
+// Global scrollbar styling for a polished enterprise feel
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+
+  &:hover {
+    background: var(--color-text-muted);
+  }
 }

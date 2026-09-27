@@ -15,13 +15,42 @@ import { EmployeeStatus } from '../../../core/models/employee.model';
     .badge {
       display: inline-flex;
       align-items: center;
-      padding: 2px 10px;
-      border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: 500;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.2;
+      letter-spacing: 0.02em;
+
+      &::before {
+        content: '';
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: var(--radius-full);
+      }
     }
-    .badge--active  { background: #e8f5e9; color: #2e7d32; }
-    .badge--inactive { background: #fce4ec; color: #c62828; }
+
+    .badge--active {
+      background: var(--color-success-bg);
+      color: var(--color-success);
+      border: 1px solid var(--color-success-border);
+
+      &::before {
+        background-color: var(--color-success);
+      }
+    }
+
+    .badge--inactive {
+      background: var(--color-error-bg);
+      color: var(--color-error);
+      border: 1px solid var(--color-error-border);
+
+      &::before {
+        background-color: var(--color-error);
+      }
+    }
   `]
 })
 export class StatusBadgeComponent {
