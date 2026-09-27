@@ -1,5 +1,6 @@
 package com.acme.compensation.analytics;
 
+import com.acme.compensation.employee.Employee;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;
@@ -12,7 +13,7 @@ import java.util.UUID;
  * Read-only analytics repository.
  * All queries use native SQL — JPQL cannot express PERCENTILE_CONT.
  */
-public interface AnalyticsRepository extends Repository<Object, UUID> {
+public interface AnalyticsRepository extends Repository<Employee, UUID> {
 
     /**
      * Per-department salary statistics for active employees.

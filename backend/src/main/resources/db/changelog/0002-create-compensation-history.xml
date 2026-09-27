@@ -19,7 +19,7 @@
             <column name="amount" type="NUMERIC(15,2)">
                 <constraints nullable="false"/>
             </column>
-            <column name="currency" type="CHAR(3)">
+            <column name="currency" type="VARCHAR(3)">
                 <constraints nullable="false"/>
             </column>
             <column name="effective_date" type="DATE">

@@ -42,7 +42,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleUnexpected(Exception ex) {
         // Log without any compensation/salary data in the message
-        log.error("Unexpected error: {}", ex.getClass().getSimpleName());
+        log.error("Unexpected error: {}", ex.getClass().getSimpleName(), ex);
         return ResponseEntity.internalServerError()
                 .body(ApiResponse.error(List.of(ApiError.global("An unexpected error occurred"))));
     }
