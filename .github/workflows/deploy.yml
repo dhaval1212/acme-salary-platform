@@ -1,46 +1,129 @@
 name: Remote Direct EC2 Build & Deploy
 
+# ── Triggers ────────────────────────────────────────────────────────────────
+# Fires when EITHER the backend CI or frontend CI workflow completes on main.
+# The job checks that BOTH have succeeded for the same commit before deploying.
 on:
-  push:
-    branches: [ "main" ]
+  workflow_run:
+    workflows: ["CI", "Frontend CI"]
+    types: [completed]
+    branches: [main]
 
 jobs:
   deploy:
+    name: Deploy to EC2
     runs-on: ubuntu-latest
 
+    # ── Gate 1: The triggering workflow must have succeeded ──────────────────
+    if: github.event.workflow_run.conclusion == 'success'
+
     steps:
-    - name: SSH and Deploy directly on EC2
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USERNAME }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        script: |
-          set -e
+      # ── Gate 2: Verify the OTHER CI workflow also succeeded ─────────────────
+      # workflow_run fires for either CI or Frontend CI individually.
+      # We use the GitHub API to confirm the sibling workflow also passed
+      # on the same commit SHA before we proceed with the deploy.
+      - name: Check both CI workflows have passed
+        id: both-ci
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
+          TRIGGERING_WORKFLOW: ${{ github.event.workflow_run.name }}
+        run: |
+          echo "Triggered by: $TRIGGERING_WORKFLOW"
+          echo "Commit SHA:   $COMMIT_SHA"
 
-          # Define the path where the app will live on EC2
-          APP_DIR="$HOME/acme-salary-platform"
-
-          # 1. Clone repository if it doesn't exist, otherwise fetch and reset to latest main
-          if [ ! -d "$APP_DIR/.git" ]; then
-            echo "Cloning repository..."
-            git clone "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" "$APP_DIR"
-            cd "$APP_DIR"
+          # Determine which workflow we need to verify (the one that did NOT trigger this run)
+          if [ "$TRIGGERING_WORKFLOW" = "CI" ]; then
+            SIBLING="Frontend CI"
           else
-            echo "Updating repository to latest main..."
-            cd "$APP_DIR"
-            git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
-            git fetch origin main
-            git reset --hard origin/main
+            SIBLING="CI"
+          fi
+          echo "Checking sibling workflow: $SIBLING"
+
+          # Query the GitHub API for the most recent run of the sibling workflow on this SHA
+          SIBLING_CONCLUSION=$(gh api \
+            "repos/${{ github.repository }}/actions/runs" \
+            --jq ".workflow_runs[] | select(.name == \"$SIBLING\" and .head_sha == \"$COMMIT_SHA\") | .conclusion" \
+            | head -1)
+
+          echo "Sibling conclusion: $SIBLING_CONCLUSION"
+
+          if [ "$SIBLING_CONCLUSION" != "success" ]; then
+            echo "::notice::Sibling workflow '$SIBLING' has not succeeded yet (status: $SIBLING_CONCLUSION). Skipping deploy."
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Both CI and Frontend CI succeeded. Proceeding with deploy."
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
           fi
 
-          # 2. Build and launch all services (db, backend, frontend) via Docker Compose
-          # FRONTEND_PORT=80 binds the Nginx reverse proxy to standard HTTP port 80
-          echo "Starting build and containers via Docker Compose..."
-          FRONTEND_PORT=80 docker compose up -d --build --remove-orphans
+      # ── Gate 3: Skip deploy if only non-deployable files changed ────────────
+      # Changes to docs/, *.md, or config/ do not require a new deployment.
+      # We inspect the files changed in the commit and bail early if nothing
+      # deployment-relevant was touched.
+      - name: Check if deployable files changed
+        id: file-changes
+        if: steps.both-ci.outputs.should_deploy == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          # Fetch the list of files changed in this commit
+          CHANGED_FILES=$(gh api \
+            "repos/${{ github.repository }}/commits/$COMMIT_SHA" \
+            --jq '[.files[].filename] | join("\n")')
 
-          # 3. Clean up dangling images to conserve EC2 disk space
-          echo "Cleaning up dangling images..."
-          docker image prune -f
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
 
-          echo "Deployment finished successfully!"
+          # Paths that DO require a redeploy (backend, frontend, docker config)
+          DEPLOYABLE=$(echo "$CHANGED_FILES" | grep -E \
+            '^(backend/|frontend/|docker-compose\.yml|\.env\.example|\.github/workflows/)' \
+            | grep -v '__pycache__' || true)
+
+          if [ -z "$DEPLOYABLE" ]; then
+            echo "::notice::No deployment-relevant files changed (docs/config only). Skipping deploy."
+            echo "needs_deploy=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Deployment-relevant changes detected:"
+            echo "$DEPLOYABLE"
+            echo "needs_deploy=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ── Deploy ───────────────────────────────────────────────────────────────
+      - name: SSH and Deploy on EC2
+        if: |
+          steps.both-ci.outputs.should_deploy == 'true' &&
+          steps.file-changes.outputs.needs_deploy == 'true'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+
+            APP_DIR="$HOME/acme-salary-platform"
+
+            # 1. Clone repository if it doesn't exist, otherwise fetch and reset to latest main
+            if [ ! -d "$APP_DIR/.git" ]; then
+              echo "Cloning repository..."
+              git clone "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" "$APP_DIR"
+              cd "$APP_DIR"
+            else
+              echo "Updating repository to latest main..."
+              cd "$APP_DIR"
+              git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+              git fetch origin main
+              git reset --hard origin/main
+            fi
+
+            # 2. Build and launch all services via Docker Compose
+            # FRONTEND_PORT=80 binds the Nginx reverse proxy to standard HTTP port 80
+            echo "Starting build and containers via Docker Compose..."
+            FRONTEND_PORT=80 docker compose up -d --build --remove-orphans
+
+            # 3. Clean up dangling images to conserve EC2 disk space
+            echo "Cleaning up dangling images..."
+            docker image prune -f
+
+            echo "Deployment finished successfully!"
