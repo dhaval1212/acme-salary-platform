@@ -108,6 +108,27 @@ class AuthControllerTest {
         }
 
         @Test
+        @DisplayName("returns 200 via /api/v1/auth/login endpoint")
+        void returns200OnV1Endpoint() throws Exception {
+            UserDetails userDetails = User.builder().username("hr.manager")
+                    .password("hashed").authorities("ROLE_HR_MANAGER").build();
+            Authentication auth = new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities());
+            com.acme.compensation.auth.User user = mockUser();
+
+            given(authenticationManager.authenticate(any())).willReturn(auth);
+            given(userRepository.findByUsername("hr.manager")).willReturn(Optional.of(user));
+            given(jwtService.generateToken(any(), any())).willReturn("mock.jwt.token");
+            given(jwtService.getExpiry()).willReturn(Instant.now().plusSeconds(3600));
+
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(jsonMapper.writeValueAsString(new LoginRequest("hr.manager", "password"))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.token").value("mock.jwt.token"));
+        }
+
+        @Test
         @DisplayName("never returns password hash in response")
         void neverReturnsPasswordHash() throws Exception {
             UserDetails userDetails = User.builder().username("hr.manager")

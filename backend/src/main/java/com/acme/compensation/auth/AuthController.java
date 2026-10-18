@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
  *  - No registration endpoint exists on this controller or anywhere else.
  */
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping({"/api/auth", "/api/v1/auth"})
 public class AuthController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
