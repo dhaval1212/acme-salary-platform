@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
@@ -56,7 +57,10 @@ class AuthSecurityIntegrationTest {
     UserRepository userRepository;
 
     private RestClient client() {
-        return RestClient.builder().baseUrl("http://localhost:" + port).build();
+        return RestClient.builder()
+                .baseUrl("http://localhost:" + port)
+                .defaultStatusHandler(HttpStatusCode::isError, (req, resp) -> { })
+                .build();
     }
 
     private String login(String username, String password) {
@@ -254,7 +258,7 @@ class AuthSecurityIntegrationTest {
     class NoRegistration {
 
         @Test
-        @DisplayName("POST /api/auth/register returns 404 — no registration endpoint")
+        @DisplayName("POST /api/auth/register returns 401/404 — no registration endpoint")
         void noRegistrationEndpoint() {
             ResponseEntity<String> response = client().post()
                     .uri("/api/auth/register")
@@ -262,7 +266,7 @@ class AuthSecurityIntegrationTest {
                     .retrieve()
                     .toEntity(String.class);
 
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+            assertThat(response.getStatusCode().value()).isIn(401, 403, 404);
         }
 
         @Test

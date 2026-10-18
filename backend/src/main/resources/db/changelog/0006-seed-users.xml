@@ -19,13 +19,13 @@
           OR use Spring Security's BCryptPasswordEncoder in a test.
 
         The hash for "changeme123" with cost=12:
-        $2a$12$IUzqr6y1SzDoE71fJzxr..KLdxK3J9LFaS0xvJLuJJp9WyFXaRyGi
+        $2a$12$G4kpRH5dtAuT4uRV266sJOvLLmK6zIv6/m9o7dt7qw1vZr9slrSkm
     -->
     <changeSet id="0006-seed-users" author="acme" context="local,test">
         <insert tableName="users">
             <column name="id"            value="00000000-0000-0000-0000-000000000001"/>
             <column name="username"      value="hr.manager"/>
-            <column name="password_hash" value="$2a$12$IUzqr6y1SzDoE71fJzxr..KLdxK3J9LFaS0xvJLuJJp9WyFXaRyGi"/>
+            <column name="password_hash" value="$2a$12$G4kpRH5dtAuT4uRV266sJOvLLmK6zIv6/m9o7dt7qw1vZr9slrSkm"/>
             <column name="full_name"     value="HR Manager"/>
             <column name="role"          value="HR_MANAGER"/>
             <column name="enabled"       valueBoolean="true"/>
@@ -34,7 +34,7 @@
         <insert tableName="users">
             <column name="id"            value="00000000-0000-0000-0000-000000000002"/>
             <column name="username"      value="disabled.user"/>
-            <column name="password_hash" value="$2a$12$IUzqr6y1SzDoE71fJzxr..KLdxK3J9LFaS0xvJLuJJp9WyFXaRyGi"/>
+            <column name="password_hash" value="$2a$12$G4kpRH5dtAuT4uRV266sJOvLLmK6zIv6/m9o7dt7qw1vZr9slrSkm"/>
             <column name="full_name"     value="Disabled User"/>
             <column name="role"          value="HR_MANAGER"/>
             <column name="enabled"       valueBoolean="false"/>
