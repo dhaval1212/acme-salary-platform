@@ -84,8 +84,10 @@ public class SecurityConfig {
 
             // ── Authorization ──────────────────────────────────────────────
             .authorizeHttpRequests(auth -> auth
-                    // Public: login endpoint
-                    .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/v1/auth/login").permitAll()
+                    // Public: login and logout endpoints
+                    .requestMatchers(HttpMethod.POST,
+                            "/api/auth/login", "/api/v1/auth/login",
+                            "/api/auth/logout", "/api/v1/auth/logout").permitAll()
                     // Public: health check
                     .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                     // Everything else requires authentication

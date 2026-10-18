@@ -40,6 +40,22 @@ Failure (401):
 
 The error message is identical for wrong passwords, unknown usernames, and disabled accounts to prevent user enumeration.
 
+## Logout API
+
+```
+POST /api/auth/logout
+Content-Type: application/json
+
+Success (200):
+{
+  "data": {
+    "message": "Logged out successfully"
+  }
+}
+```
+
+Client clears in-memory JWT tokens and session state. The server provides both `/api/auth/logout` and `/api/v1/auth/logout` endpoints.
+
 ## User Provisioning
 
 Users are stored in the `users` table. There is no public signup API.

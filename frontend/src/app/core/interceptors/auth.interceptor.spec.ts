@@ -64,6 +64,15 @@ describe('authInterceptor', () => {
       expect(req.request.headers.get('Authorization')).toBeNull();
       req.flush({});
     });
+
+    it('bypasses /auth/logout without attaching token even when a token exists', () => {
+      (authService as any).tokenSubject.next('existing-token');
+
+      http.post(`${environment.apiBaseUrl}/auth/logout`, {}).subscribe();
+      const req = httpMock.expectOne(r => r.url.includes('/auth/logout'));
+      expect(req.request.headers.get('Authorization')).toBeNull();
+      req.flush({});
+    });
   });
 
   describe('401 handling', () => {
@@ -111,6 +120,16 @@ describe('authInterceptor', () => {
       });
       const req = httpMock.expectOne(r => r.url.includes('/auth/login'));
       req.flush({ message: 'Invalid credentials' }, { status: 401, statusText: 'Unauthorized' });
+    });
+
+    it('does not call logout on 401 from /auth/logout endpoint', () => {
+      http.post(`${environment.apiBaseUrl}/auth/logout`, {}).subscribe({
+        error: () => {
+          expect(logoutSpy).not.toHaveBeenCalled();
+        }
+      });
+      const req = httpMock.expectOne(r => r.url.includes('/auth/logout'));
+      req.flush({ message: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
     });
 
     it('re-throws the error so components can handle it', (done) => {

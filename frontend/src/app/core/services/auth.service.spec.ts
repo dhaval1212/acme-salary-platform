@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { AuthService } from './auth.service';
 import { LoginResponse } from '../models/auth.model';
 import { ApiResponse } from '../models/api-response.model';
@@ -89,9 +89,13 @@ describe('AuthService', () => {
   });
 
   describe('logout()', () => {
-    it('clears all auth state', (done) => {
+    it('clears all auth state and calls logout endpoint when authenticated', (done) => {
       service.login({ username: 'hr.manager', password: 'pass' }).subscribe(() => {
         service.logout();
+        const logoutReq = httpMock.expectOne(r => r.url.includes('/auth/logout'));
+        expect(logoutReq.request.method).toBe('POST');
+        logoutReq.flush({ data: { message: 'Logged out successfully' } });
+
         expect(service.isAuthenticated()).toBeFalse();
         expect(service.getToken()).toBeNull();
         expect(service.getCurrentUser()).toBeNull();
@@ -99,6 +103,13 @@ describe('AuthService', () => {
       });
       const req = httpMock.expectOne(r => r.url.includes('/auth/login'));
       req.flush(MOCK_LOGIN_RESPONSE);
+    });
+
+    it('navigates to /login on logout', () => {
+      const router = TestBed.inject(Router);
+      const navigateSpy = spyOn(router, 'navigate');
+      service.logout();
+      expect(navigateSpy).toHaveBeenCalledWith(['/login']);
     });
   });
 

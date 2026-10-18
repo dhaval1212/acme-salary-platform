@@ -251,4 +251,27 @@ class AuthControllerTest {
                                     result.getResponse().getStatus()).isNotEqualTo(200));
         }
     }
+
+    @Nested
+    @DisplayName("POST /api/auth/logout")
+    class Logout {
+
+        @Test
+        @DisplayName("returns 200 with success message on logout")
+        void returns200OnLogout() throws Exception {
+            mockMvc.perform(post("/api/auth/logout")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.message").value("Logged out successfully"));
+        }
+
+        @Test
+        @DisplayName("returns 200 via /api/v1/auth/logout endpoint")
+        void returns200OnV1Logout() throws Exception {
+            mockMvc.perform(post("/api/v1/auth/logout")
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.message").value("Logged out successfully"));
+        }
+    }
 }

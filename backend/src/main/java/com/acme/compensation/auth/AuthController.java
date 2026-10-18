@@ -5,6 +5,7 @@ import com.acme.compensation.auth.dto.LoginRequest;
 import com.acme.compensation.auth.dto.LoginResponse;
 import com.acme.compensation.common.ApiResponse;
 import jakarta.validation.Valid;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -87,5 +89,14 @@ public class AuthController {
             return ResponseEntity.status(401)
                     .body(ApiResponse.error("global", INVALID_CREDENTIALS_MESSAGE));
         }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Map<String, String>>> logout() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()) {
+            log.info("User logged out: {}", auth.getName());
+        }
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("message", "Logged out successfully")));
     }
 }

@@ -16,9 +16,9 @@ export const authInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
   next: HttpHandlerFn
 ) => {
-  // Bypass login endpoint: user does not have a token for that API,
-  // and 401 indicates invalid credentials rather than an expired session
-  if (req.url.includes('/auth/login')) {
+  // Bypass auth endpoints: user does not have or need a token for login/logout,
+  // and 401 on login indicates invalid credentials rather than an expired session
+  if (req.url.includes('/auth/login') || req.url.includes('/auth/logout')) {
     return next(req);
   }
 
@@ -36,8 +36,8 @@ export const authInterceptor: HttpInterceptorFn = (
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401 && isApiRequest) {
-        // Token expired or invalid — clear state and redirect
-        authService.logout();
+        // Token expired or invalid — clear state and redirect without notifying backend
+        authService.logout(false);
       }
       // 403: authenticated but forbidden — do NOT log out
       // Let the component handle the 403 error display

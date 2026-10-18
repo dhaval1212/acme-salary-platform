@@ -49,6 +49,49 @@
           <span>System default</span>
         </button>
       </mat-menu>
+
+      <!-- User Profile Menu Button -->
+      <button type="button"
+              [matMenuTriggerFor]="userProfileMenu"
+              aria-label="User profile menu"
+              matTooltip="User profile"
+              id="user-profile-menu-button"
+              class="shell__profile-btn">
+        <span class="shell__profile-avatar">
+          {{ getUserInitials(currentUser$ | async) }}
+        </span>
+        <span class="shell__profile-name">
+          {{ (currentUser$ | async)?.fullName || (currentUser$ | async)?.username || 'HR Manager' }}
+        </span>
+        <mat-icon class="shell__profile-chevron">expand_more</mat-icon>
+      </button>
+
+      <!-- User Profile Dropdown Menu -->
+      <mat-menu #userProfileMenu="matMenu" xPosition="before" class="shell__profile-menu">
+        <div class="shell__menu-header" (click)="$event.stopPropagation()">
+          <div class="shell__menu-avatar">
+            <span>{{ getUserInitials(currentUser$ | async) }}</span>
+          </div>
+          <div class="shell__menu-user-details">
+            <span class="shell__menu-fullname" id="user-display-name">
+              {{ (currentUser$ | async)?.fullName || 'HR Manager' }}
+            </span>
+            <span class="shell__menu-username">
+              &#64;{{ (currentUser$ | async)?.username || 'hr.manager' }}
+            </span>
+            <span class="shell__menu-role">
+              {{ (currentUser$ | async)?.role || 'HR_MANAGER' }}
+            </span>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <button mat-menu-item id="logout-button" (click)="logout()" class="shell__menu-logout">
+          <mat-icon class="shell__logout-icon">logout</mat-icon>
+          <span>Log out</span>
+        </button>
+      </mat-menu>
     </mat-toolbar>
     <main class="shell__main">
       <router-outlet />

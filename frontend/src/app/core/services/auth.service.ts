@@ -18,7 +18,8 @@ import { ApiResponse } from '../models/api-response.model';
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly loginUrl = `${environment.apiBaseUrl}/auth/login`;
+  private readonly loginUrl  = `${environment.apiBaseUrl}/auth/login`;
+  private readonly logoutUrl = `${environment.apiBaseUrl}/auth/logout`;
 
   // Private — token is never exposed directly; only isAuthenticated() and
   // getToken() provide controlled access.
@@ -52,10 +53,17 @@ export class AuthService {
   }
 
   /**
-   * Clears all in-memory auth state.
+   * Clears all in-memory auth state and optionally notifies backend.
    * After calling this, getToken() returns null and isAuthenticated() returns false.
    */
-  logout(): void {
+  logout(notifyBackend = true): void {
+    const token = this.tokenSubject.getValue();
+    if (notifyBackend && token) {
+      this.http.post(this.logoutUrl, {}).subscribe({
+        next: () => {},
+        error: () => {}
+      });
+    }
     this.tokenSubject.next(null);
     this.currentUserSubject.next(null);
     this.isAuthenticated$.next(false);

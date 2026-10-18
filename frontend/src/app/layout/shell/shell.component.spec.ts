@@ -1,26 +1,33 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ShellComponent } from './shell.component';
 import { ThemeService } from '../../core/services/theme.service';
+import { AuthService } from '../../core/services/auth.service';
 
 describe('ShellComponent', () => {
   let fixture: ComponentFixture<ShellComponent>;
   let component: ShellComponent;
   let themeService: ThemeService;
+  let authService: AuthService;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ShellComponent],
       providers: [
         provideAnimationsAsync(),
-        provideRouter([])
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting()
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(ShellComponent);
     component = fixture.componentInstance;
     themeService = TestBed.inject(ThemeService);
+    authService = TestBed.inject(AuthService);
     fixture.detectChanges();
   });
 
@@ -54,5 +61,23 @@ describe('ShellComponent', () => {
     expect(component.themeService).toBe(themeService);
     const btn = fixture.nativeElement.querySelector('.shell__theme-btn');
     expect(btn).toBeTruthy();
+  });
+
+  it('renders user profile button in the toolbar', () => {
+    const profileBtn = fixture.nativeElement.querySelector('#user-profile-menu-button');
+    expect(profileBtn).toBeTruthy();
+  });
+
+  it('computes user initials correctly', () => {
+    expect(component.getUserInitials(null)).toBe('HR');
+    expect(component.getUserInitials({ id: '1', username: 'hr.manager', fullName: 'HR Manager', role: 'HR_MANAGER' })).toBe('HM');
+    expect(component.getUserInitials({ id: '2', username: 'admin', fullName: 'Admin', role: 'HR_MANAGER' })).toBe('AD');
+    expect(component.getUserInitials({ id: '3', username: 'jsmith', fullName: '', role: 'HR_MANAGER' })).toBe('JS');
+  });
+
+  it('calls authService.logout() when logout is triggered', () => {
+    const logoutSpy = spyOn(authService, 'logout');
+    component.logout();
+    expect(logoutSpy).toHaveBeenCalled();
   });
 });
