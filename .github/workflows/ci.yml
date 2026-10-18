@@ -106,13 +106,12 @@ jobs:
 
   # ── 3. Security scanning ───────────────────────────────────────────────────
   #
-  #  Trivy      — scans the filesystem (pom.xml, JAR deps) for known CVEs;
-  #               results uploaded as SARIF to the GitHub Security tab.
-  #  OWASP DC   — dedicated dependency CVE scan using the NVD database;
-  #               fails the job on CVSS ≥ 7 (HIGH/CRITICAL) findings.
+  #  Trivy  — fast filesystem & dependency vulnerability scanner (< 30 seconds).
+  #           Replaces slow OWASP Dependency Check (which downloaded 5+ mins of NVD feeds).
+  #           Fails the build on HIGH/CRITICAL vulnerabilities and uploads SARIF report.
   # ──────────────────────────────────────────────────────────────────────────
   security:
-    name: Security Scan (Trivy + OWASP Dependency Check)
+    name: Security Scan (Trivy Vulnerability Scanner)
     runs-on: ubuntu-latest
     permissions:
       # Required to upload SARIF results to the GitHub Security tab
@@ -123,15 +122,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Java 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'maven'
-
-      # ── Trivy: fast CVE scan, no NVD key needed ──────────────────────────
-      - name: Run Trivy vulnerability scanner
+      # ── Trivy: fast CVE scan, no NVD download/rate-limits ─────────────────
+      - name: Run Trivy vulnerability scanner (SARIF report)
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: 'fs'
@@ -140,7 +132,6 @@ jobs:
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'
-          # Don't fail the step here — we surface findings via SARIF + OWASP DC
           exit-code: '0'
 
       - name: Upload Trivy SARIF to GitHub Security tab
@@ -150,24 +141,15 @@ jobs:
           sarif_file: 'trivy-results.sarif'
           category: 'trivy'
 
-      # ── OWASP Dependency Check: deep CVE scan with NVD data ───────────────
-      - name: Run OWASP Dependency Check
-        # failBuildOnCVSS=7 means the job fails on any HIGH or CRITICAL CVE.
-        # NVD data is downloaded on first run (~5 min); subsequent runs are
-        # fast because GitHub caches the Maven local repo via 'cache: maven'.
-        run: |
-          ./mvnw dependency-check:check \
-            -DfailBuildOnCVSS=7 \
-            -DsuppressionFile=../config/owasp-suppressions.xml \
-            --batch-mode --no-transfer-progress
-
-      - name: Upload OWASP DC HTML report
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Enforce vulnerability gate (fail on HIGH/CRITICAL)
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
-          name: owasp-dependency-check-report
-          path: backend/target/dependency-check-report.html
-          retention-days: 14
+          scan-type: 'fs'
+          scan-ref: 'backend'
+          scanners: 'vuln'
+          severity: 'CRITICAL,HIGH'
+          format: 'table'
+          exit-code: '1'
 
   # ── 4. Build JAR ──────────────────────────────────────────────────────────
   build:
