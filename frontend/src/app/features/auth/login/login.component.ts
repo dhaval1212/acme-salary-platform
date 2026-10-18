@@ -37,6 +37,13 @@ export class LoginComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Always build the form first — the template binds [formGroup]="form"
+    // on first detectChanges, even when we redirect immediately after.
+    this.form = this.fb.group({
+      username: ['', [Validators.required]],
+      password: ['', [Validators.required]],
+    });
+
     // If already authenticated, redirect away from login page
     if (this.authService.isAuthenticated()) {
       this.router.navigate(['/employees']);
@@ -44,11 +51,6 @@ export class LoginComponent implements OnInit {
     }
 
     this.returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/employees';
-
-    this.form = this.fb.group({
-      username: ['', [Validators.required]],
-      password: ['', [Validators.required]],
-    });
   }
 
   login(): void {
@@ -67,7 +69,7 @@ export class LoginComponent implements OnInit {
         this.errorMessage = 'Invalid credentials. Please try again.';
         this.loading = false;
         // Clear password field after failed attempt
-        this.form.get('password')?.reset();
+        this.form.get('password')?.setValue('');
       }
     });
   }

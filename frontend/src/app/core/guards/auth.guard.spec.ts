@@ -1,4 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
 import { authGuard } from './auth.guard';
 import { AuthService } from '../services/auth.service';
@@ -11,7 +13,9 @@ describe('authGuard', () => {
     TestBed.configureTestingModule({
       providers: [
         AuthService,
-        { provide: Router, useValue: { createUrlTree: jasmine.createSpy('createUrlTree') } }
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: Router, useValue: { createUrlTree: jasmine.createSpy('createUrlTree'), navigate: jasmine.createSpy('navigate') } }
       ]
     });
     authService = TestBed.inject(AuthService);
