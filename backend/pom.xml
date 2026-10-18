@@ -21,9 +21,35 @@
         <java.version>21</java.version>
         <testcontainers.version>1.20.4</testcontainers.version>
         <spotbugs.version>4.8.6.4</spotbugs.version>
+        <jjwt.version>0.12.6</jjwt.version>
     </properties>
 
     <dependencies>
+        <!-- ── Security ─────────────────────────────────────────────── -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <!-- ── JWT (JJWT 0.12.x — maintained fork, Java 21 compatible) ── -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>${jjwt.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- ── Web ─────────────────────────────────────────────────── -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -71,6 +97,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
         <!-- Testcontainers — real PostgreSQL for repository tests -->
@@ -138,6 +169,8 @@
                             <!-- Exclude generated/config classes from thresholds -->
                             <excludes>
                                 <exclude>com/acme/compensation/CompensationApplication.class</exclude>
+                                <exclude>com/acme/compensation/auth/SecurityConfig.class</exclude>
+                                <exclude>com/acme/compensation/auth/JwtProperties.class</exclude>
                             </excludes>
                         </configuration>
                     </execution>

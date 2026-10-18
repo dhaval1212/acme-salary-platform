@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <!--
+        Seed users for local development and test environments ONLY.
+        Context "local,test" ensures this never runs in production.
+
+        The password hash below is the BCrypt hash of "changeme123"
+        (cost factor 12). It is intentionally a weak password suitable
+        only for local development — it MUST be replaced in any
+        non-development environment.
+
+        To generate a new BCrypt hash:
+          htpasswd -bnBC 12 "" <your-password> | tr -d ':\n'
+          OR use Spring Security's BCryptPasswordEncoder in a test.
+
+        The hash for "changeme123" with cost=12:
+        $2a$12$G4kpRH5dtAuT4uRV266sJOvLLmK6zIv6/m9o7dt7qw1vZr9slrSkm
+    -->
+    <changeSet id="0006-seed-users" author="acme" context="local,test">
+        <insert tableName="users">
+            <column name="id"            value="00000000-0000-0000-0000-000000000001"/>
+            <column name="username"      value="hr.manager"/>
+            <column name="password_hash" value="$2a$12$G4kpRH5dtAuT4uRV266sJOvLLmK6zIv6/m9o7dt7qw1vZr9slrSkm"/>
+            <column name="full_name"     value="HR Manager"/>
+            <column name="role"          value="HR_MANAGER"/>
+            <column name="enabled"       valueBoolean="true"/>
+        </insert>
+        <!-- Disabled user for testing that disabled accounts cannot log in -->
+        <insert tableName="users">
+            <column name="id"            value="00000000-0000-0000-0000-000000000002"/>
+            <column name="username"      value="disabled.user"/>
+            <column name="password_hash" value="$2a$12$G4kpRH5dtAuT4uRV266sJOvLLmK6zIv6/m9o7dt7qw1vZr9slrSkm"/>
+            <column name="full_name"     value="Disabled User"/>
+            <column name="role"          value="HR_MANAGER"/>
+            <column name="enabled"       valueBoolean="false"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

@@ -149,5 +149,23 @@ class AnalyticsServiceTest {
             assertThat(result).extracting(DepartmentStats::headcount)
                     .containsExactly(10L, 3L);
         }
+
+        @Test
+        @DisplayName("converts non-BigDecimal values to BigDecimal correctly")
+        void handlesNonBigDecimalValues() {
+            Object[] row = new Object[]{
+                    "Marketing", "Canada", "CAD", 3L,
+                    "75000.50", 72000.0, 60000L, "90000"
+            };
+            ArrayList<Object[]> rows = new ArrayList<>();
+            rows.add(row);
+            given(repository.findDepartmentStatsRaw(any(), any(), any()))
+                    .willReturn(rows);
+
+            List<DepartmentStats> result = service.getDepartmentStats(null, null);
+
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).avgSalary()).isEqualByComparingTo("75000.50");
+        }
     }
 }

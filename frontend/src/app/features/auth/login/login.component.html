@@ -1,0 +1,114 @@
+<div class="login-page">
+  <div class="login-container">
+    <!-- Brand Header -->
+    <header class="login-brand-header">
+      <div class="login-brand-header__logo" aria-hidden="true">
+        <mat-icon>account_balance</mat-icon>
+      </div>
+      <h1 class="login-brand-header__title">ACME Compensation Hub</h1>
+      <p class="login-brand-header__subtitle">Enterprise salary analytics & compensation management</p>
+    </header>
+
+    <!-- Login Card -->
+    <mat-card class="login-card">
+      <mat-card-header class="login-card__header">
+        <mat-card-title class="login-card__title">Sign In</mat-card-title>
+        <mat-card-subtitle class="login-card__subtitle">Enter your enterprise credentials to continue</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content class="login-card__content">
+        <!-- Error message — generic, accessible alert -->
+        @if (errorMessage) {
+          <div class="login-error" role="alert" aria-live="polite">
+            <mat-icon class="login-error__icon">error_outline</mat-icon>
+            <span class="login-error__text">{{ errorMessage }}</span>
+          </div>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="login()" class="login-form" novalidate>
+          <div class="login-form__field-wrapper">
+            <mat-form-field appearance="outline" class="login-form__field">
+              <mat-label>Username</mat-label>
+              <mat-icon matPrefix class="login-form__field-icon">person_outline</mat-icon>
+              <input matInput
+                     formControlName="username"
+                     autocomplete="username"
+                     id="username"
+                     placeholder="e.g. hr.manager"
+                     aria-label="Username"
+                     [attr.aria-invalid]="form.get('username')?.invalid && form.get('username')?.touched">
+              @if (form.get('username')?.hasError('required') && form.get('username')?.touched) {
+                <mat-error>Username is required</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <div class="login-form__field-wrapper">
+            <mat-form-field appearance="outline" class="login-form__field">
+              <mat-label>Password</mat-label>
+              <mat-icon matPrefix class="login-form__field-icon">lock_outline</mat-icon>
+              <input matInput
+                     formControlName="password"
+                     [type]="hidePassword ? 'password' : 'text'"
+                     autocomplete="current-password"
+                     id="password"
+                     placeholder="Enter your password"
+                     aria-label="Password"
+                     [attr.aria-invalid]="form.get('password')?.invalid && form.get('password')?.touched">
+              <button mat-icon-button matSuffix
+                      type="button"
+                      class="login-form__visibility-btn"
+                      (click)="hidePassword = !hidePassword"
+                      [attr.aria-label]="hidePassword ? 'Show password' : 'Hide password'">
+                <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+              @if (form.get('password')?.hasError('required') && form.get('password')?.touched) {
+                <mat-error>Password is required</mat-error>
+              }
+            </mat-form-field>
+          </div>
+
+          <button mat-flat-button
+                  color="primary"
+                  type="submit"
+                  class="login-form__submit"
+                  [disabled]="form.invalid || loading"
+                  aria-label="Sign in">
+            @if (loading) {
+              <mat-spinner diameter="20" class="login-form__spinner"></mat-spinner>
+              <span>Authenticating...</span>
+            } @else {
+              <span class="login-form__btn-label">
+                <span>Sign In</span>
+                <mat-icon class="login-form__submit-arrow" aria-hidden="true">arrow_forward</mat-icon>
+              </span>
+            }
+          </button>
+        </form>
+
+        <!-- Demo credentials helper badge -->
+        <div class="login-demo-helper">
+          <div class="login-demo-helper__badge">
+            <mat-icon>verified_user</mat-icon>
+            <span>Demo Credentials</span>
+          </div>
+          <div class="login-demo-helper__credentials">
+            <span class="login-demo-helper__item">
+              <span class="label">User:</span> <code>hr.manager</code>
+            </span>
+            <span class="login-demo-helper__divider" aria-hidden="true">•</span>
+            <span class="login-demo-helper__item">
+              <span class="label">Password:</span> <code>changeme123</code>
+            </span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Security Footnote -->
+    <footer class="login-footer">
+      <mat-icon class="login-footer__icon">lock</mat-icon>
+      <span>Stateless JWT encryption &bull; Strict Role-Based Access Control</span>
+    </footer>
+  </div>
+</div>

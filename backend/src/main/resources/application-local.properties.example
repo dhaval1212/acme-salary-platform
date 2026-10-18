@@ -6,3 +6,9 @@ spring.datasource.username=compensation
 spring.datasource.password=compensation
 
 spring.liquibase.contexts=local
+
+# Generate a real secret with: openssl rand -hex 32
+jwt.secret=<replace-with-at-least-32-character-secret>
+jwt.expiration-ms=3600000
+
+app.cors.allowed-origins=http://localhost:4200

@@ -9,5 +9,7 @@
     <include file="db/changelog/0002-create-compensation-history.xml"/>
     <include file="db/changelog/0003-create-indexes.xml"/>
     <include file="db/changelog/0004-seed-data.xml"/>
+    <include file="db/changelog/0005-create-users.xml"/>
+    <include file="db/changelog/0006-seed-users.xml"/>
 
 </databaseChangeLog>
