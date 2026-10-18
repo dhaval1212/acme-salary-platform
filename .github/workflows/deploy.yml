@@ -1,0 +1,179 @@
+name: Remote Direct EC2 Build & Deploy
+
+# ── Triggers ────────────────────────────────────────────────────────────────
+# Fires on push to main — but only when deployment-relevant files change.
+# Docs, config, and markdown-only pushes do not trigger a deploy.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "docker-compose.yml"
+      - ".env.example"
+      - ".github/workflows/**"
+
+jobs:
+  # ── Job 1: Determine which CI pipelines need to pass for this commit ───────
+  # CI ("CI") only runs when backend/** changes.
+  # Frontend CI ("Frontend CI") only runs when frontend/** changes.
+  # If a push touches only backend files, we must not wait for Frontend CI
+  # (it will never appear), and vice versa.
+  # This job inspects the changed files and sets flags for which pipelines
+  # are expected to run, then waits only for those.
+  wait-for-ci:
+    name: Wait for Required CI Pipelines
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Detect changed paths and wait for relevant CI pipelines
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_SHA: ${{ github.sha }}
+          POLL_INTERVAL: "20"
+          MAX_WAIT: "2100"   # 35 minutes
+        run: |
+          # ── Step 1: Determine which files changed in this commit ─────────
+          CHANGED_FILES=$(gh api \
+            "repos/${{ github.repository }}/commits/$COMMIT_SHA" \
+            --jq '[.files[].filename] | join("\n")')
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          echo ""
+
+          # Determine which CI pipelines are expected to run
+          NEEDS_BACKEND_CI=false
+          NEEDS_FRONTEND_CI=false
+
+          if echo "$CHANGED_FILES" | grep -qE '^backend/|^\.github/workflows/ci\.yml'; then
+            NEEDS_BACKEND_CI=true
+          fi
+
+          if echo "$CHANGED_FILES" | grep -qE '^frontend/|^\.github/workflows/frontend-ci\.yml'; then
+            NEEDS_FRONTEND_CI=true
+          fi
+
+          echo "Needs Backend CI  (CI):          $NEEDS_BACKEND_CI"
+          echo "Needs Frontend CI (Frontend CI): $NEEDS_FRONTEND_CI"
+          echo ""
+
+          if [ "$NEEDS_BACKEND_CI" = "false" ] && [ "$NEEDS_FRONTEND_CI" = "false" ]; then
+            echo "No CI pipeline is expected to run for these changes (docker-compose / workflow changes only)."
+            echo "Proceeding directly to deploy."
+            exit 0
+          fi
+
+          # ── Step 2: Helper — wait for a named workflow to complete ───────
+          wait_for_workflow() {
+            local WORKFLOW_NAME="$1"
+            local RUN_ID=""
+            local ELAPSED=0
+
+            echo "──────────────────────────────────────────"
+            echo "Waiting for: $WORKFLOW_NAME"
+            echo "──────────────────────────────────────────"
+
+            # Phase 1: Wait for the run to appear (brief creation delay after push)
+            until [ -n "$RUN_ID" ]; do
+              RUN_ID=$(gh api \
+                "repos/${{ github.repository }}/actions/runs" \
+                --jq ".workflow_runs[] | select(.name == \"$WORKFLOW_NAME\" and .head_sha == \"$COMMIT_SHA\") | .id" \
+                | head -1)
+
+              if [ -z "$RUN_ID" ]; then
+                if [ "$ELAPSED" -ge "$MAX_WAIT" ]; then
+                  echo "::error::Timed out waiting for '$WORKFLOW_NAME' to appear after ${MAX_WAIT}s."
+                  exit 1
+                fi
+                echo "[${ELAPSED}s] '$WORKFLOW_NAME' run not yet created — retrying in ${POLL_INTERVAL}s..."
+                sleep "$POLL_INTERVAL"
+                ELAPSED=$((ELAPSED + POLL_INTERVAL))
+              fi
+            done
+
+            echo "[${ELAPSED}s] Found '$WORKFLOW_NAME' run ID: $RUN_ID"
+
+            # Phase 2: Poll until the run reaches a terminal status
+            while true; do
+              RUN_DATA=$(gh api "repos/${{ github.repository }}/actions/runs/$RUN_ID" \
+                --jq '{status: .status, conclusion: .conclusion}')
+              STATUS=$(echo "$RUN_DATA" | jq -r '.status')
+              CONCLUSION=$(echo "$RUN_DATA" | jq -r '.conclusion')
+
+              if [ "$STATUS" = "completed" ]; then
+                echo "[${ELAPSED}s] '$WORKFLOW_NAME' completed — conclusion: $CONCLUSION"
+                if [ "$CONCLUSION" != "success" ]; then
+                  echo "::error::'$WORKFLOW_NAME' did not succeed (conclusion: $CONCLUSION). Aborting deploy."
+                  exit 1
+                fi
+                echo "✓ '$WORKFLOW_NAME' passed."
+                return 0
+              fi
+
+              if [ "$ELAPSED" -ge "$MAX_WAIT" ]; then
+                echo "::error::Timed out waiting for '$WORKFLOW_NAME' after ${MAX_WAIT}s (status: $STATUS)."
+                exit 1
+              fi
+
+              echo "[${ELAPSED}s] '$WORKFLOW_NAME' status: $STATUS — waiting ${POLL_INTERVAL}s..."
+              sleep "$POLL_INTERVAL"
+              ELAPSED=$((ELAPSED + POLL_INTERVAL))
+            done
+          }
+
+          # ── Step 3: Wait only for pipelines that are expected to run ─────
+          if [ "$NEEDS_BACKEND_CI" = "true" ]; then
+            wait_for_workflow "CI"
+          fi
+
+          if [ "$NEEDS_FRONTEND_CI" = "true" ]; then
+            wait_for_workflow "Frontend CI"
+          fi
+
+          echo ""
+          echo "✓ All required CI pipelines succeeded for commit $COMMIT_SHA. Proceeding to deploy."
+
+  # ── Job 2: Deploy to EC2 ──────────────────────────────────────────────────
+  # Only starts after wait-for-ci succeeds.
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    needs: [wait-for-ci]
+
+    steps:
+      - name: SSH and Deploy on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+
+            APP_DIR="$HOME/acme-salary-platform"
+
+            # 1. Clone repository if it doesn't exist, otherwise fetch and reset to latest main
+            if [ ! -d "$APP_DIR/.git" ]; then
+              echo "Cloning repository..."
+              git clone "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" "$APP_DIR"
+              cd "$APP_DIR"
+            else
+              echo "Updating repository to latest main..."
+              cd "$APP_DIR"
+              git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+              git fetch origin main
+              git reset --hard origin/main
+            fi
+
+            # 2. Build and launch all services via Docker Compose
+            # FRONTEND_PORT=80 binds the Nginx reverse proxy to standard HTTP port 80
+            echo "Starting build and containers via Docker Compose..."
+            FRONTEND_PORT=80 docker compose up -d --build --remove-orphans
+
+            # 3. Clean up dangling images to conserve EC2 disk space
+            echo "Cleaning up dangling images..."
+            docker image prune -f
+
+            echo "Deployment finished successfully!"

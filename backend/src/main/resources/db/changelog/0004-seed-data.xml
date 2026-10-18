@@ -10,7 +10,8 @@
         Never executed in production.
         Delegates to a SQL file so the data generator can be a script.
     -->
-    <changeSet id="0004-seed-data" author="acme" context="local,test">
+    <changeSet id="0004-seed-data" author="acme" context="local,test" runOnChange="true">
+        <validCheckSum>ANY</validCheckSum>
         <sqlFile path="db/seed/seed-employees.sql"
                  relativeToChangelogFile="false"
                  splitStatements="true"

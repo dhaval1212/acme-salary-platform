@@ -6,9 +6,11 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatDialog } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBar } from '@angular/material/snack-bar';
+
 import { EmployeeService } from '../../../core/services/employee.service';
 import { CompensationService } from '../../../core/services/compensation.service';
 import { Employee } from '../../../core/models/employee.model';
@@ -22,7 +24,12 @@ import { CompensationFormDialogComponent } from '../../compensation/compensation
 @Component({
   selector: 'app-employee-detail',
   standalone: true,
-  imports: [DatePipe, MatCardModule, MatButtonModule, MatIconModule, MatTableModule, MatDialogModule, MatProgressSpinnerModule, MatSnackBarModule, PageHeaderComponent, StatusBadgeComponent, CurrencyDisplayComponent, EmptyStateComponent],
+  imports: [
+    DatePipe,
+    MatCardModule, MatButtonModule, MatIconModule, MatTableModule,
+    MatDividerModule, MatProgressSpinnerModule,
+    PageHeaderComponent, StatusBadgeComponent, CurrencyDisplayComponent, EmptyStateComponent,
+  ],
   templateUrl: './employee-detail.component.html',
   styleUrl: './employee-detail.component.scss'
 })
@@ -35,23 +42,38 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   constructor(
-    private route: ActivatedRoute, private location: Location,
-    private employeeService: EmployeeService, private compensationService: CompensationService,
-    private dialog: MatDialog, private snackBar: MatSnackBar
+    private route: ActivatedRoute,
+    private location: Location,
+    private employeeService: EmployeeService,
+    private compensationService: CompensationService,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id')!;
     this.employeeService.getById(id).pipe(takeUntil(this.destroy$)).subscribe({
-      next: emp => { this.employee = emp; this.loadCompensation(id); },
-      error: () => { this.snackBar.open('Employee not found', 'Dismiss', { duration: 3000 }); this.loading = false; }
+      next: emp => {
+        this.employee = emp;
+        this.loadCompensation(id);
+      },
+      error: () => {
+        this.snackBar.open('Employee not found', 'Dismiss', { duration: 3000 });
+        this.loading = false;
+      }
     });
   }
 
-  ngOnDestroy(): void { this.destroy$.next(); this.destroy$.complete(); }
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   loadCompensation(id: string): void {
-    this.compensationService.getCurrent(id).pipe(takeUntil(this.destroy$)).subscribe({ next: c => this.currentCompensation = c, error: () => {} });
+    this.compensationService.getCurrent(id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: c => { this.currentCompensation = c; },
+      error: () => {}
+    });
     this.compensationService.getHistory(id).pipe(takeUntil(this.destroy$)).subscribe({
       next: h => { this.compensationHistory = h; this.loading = false; },
       error: () => { this.loading = false; }
@@ -60,8 +82,13 @@ export class EmployeeDetailComponent implements OnInit, OnDestroy {
 
   openCompensationDialog(): void {
     if (!this.employee) return;
-    const ref = this.dialog.open(CompensationFormDialogComponent, { width: '480px', data: { employeeId: this.employee.id, employeeName: this.employee.fullName } });
-    ref.afterClosed().subscribe(result => { if (result && this.employee) this.loadCompensation(this.employee.id); });
+    const ref = this.dialog.open(CompensationFormDialogComponent, {
+      width: '480px',
+      data: { employeeId: this.employee.id, employeeName: this.employee.fullName }
+    });
+    ref.afterClosed().subscribe(result => {
+      if (result && this.employee) this.loadCompensation(this.employee.id);
+    });
   }
 
   goBack(): void { this.location.back(); }

@@ -1,9 +1,8 @@
 package com.acme.compensation.employee;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -41,7 +40,7 @@ public class Employee {
     @Column(nullable = false, length = 100)
     private String country;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = EmployeeStatusConverter.class)
     @Column(nullable = false, length = 20)
     private EmployeeStatus status = EmployeeStatus.ACTIVE;
 

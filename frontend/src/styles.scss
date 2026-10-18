@@ -1,3 +1,33 @@
-html, body { height: 100%; margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
-.row-hover:hover { background-color: rgba(0, 0, 0, 0.04); }
-.mat-mdc-header-row { position: sticky; top: 0; z-index: 1; background: white; }
+@use 'styles/tokens';
+@use 'styles/components';
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-family);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+// Global scrollbar styling for a polished enterprise feel
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+
+  &:hover {
+    background: var(--color-text-muted);
+  }
+}

@@ -30,11 +30,13 @@ public class AnalyticsService {
     private DepartmentStats mapRow(Object[] row) {
         return new DepartmentStats(
                 (String) row[0],
-                ((Number) row[1]).longValue(),
-                toBigDecimal(row[2]),
-                toBigDecimal(row[3]),
+                (String) row[1],
+                (String) row[2],
+                ((Number) row[3]).longValue(),
                 toBigDecimal(row[4]),
-                toBigDecimal(row[5])
+                toBigDecimal(row[5]),
+                toBigDecimal(row[6]),
+                toBigDecimal(row[7])
         );
     }
 

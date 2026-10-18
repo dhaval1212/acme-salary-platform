@@ -26,9 +26,9 @@ public interface EmployeeRepository extends JpaRepository<Employee, UUID> {
             WHERE (:department IS NULL OR e.department = :department)
               AND (:country    IS NULL OR e.country    = :country)
               AND (:status     IS NULL OR e.status     = :status)
-              AND (:search     IS NULL
-                   OR LOWER(e.fullName) LIKE LOWER(CONCAT('%', :search, '%'))
-                   OR LOWER(e.email)    LIKE LOWER(CONCAT('%', :search, '%')))
+              AND (cast(:search as string) IS NULL
+                   OR LOWER(e.fullName) LIKE LOWER(CONCAT('%', cast(:search as string), '%'))
+                   OR LOWER(e.email)    LIKE LOWER(CONCAT('%', cast(:search as string), '%')))
             """)
     Page<Employee> findAllFiltered(
             @Param("department") String department,

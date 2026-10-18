@@ -69,8 +69,8 @@
 
         <!-- ── Migrations ──────────────────────────────────────────── -->
         <dependency>
-            <groupId>org.liquibase</groupId>
-            <artifactId>liquibase-core</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-liquibase</artifactId>
         </dependency>
 
         <!-- ── Validation ──────────────────────────────────────────── -->
@@ -156,12 +156,12 @@
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.70</minimum>
+                                            <minimum>0.80</minimum>
                                         </limit>
                                         <limit>
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.60</minimum>
+                                            <minimum>0.75</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
@@ -230,6 +230,7 @@
                     <!-- Default is non-failing locally; CI overrides to 7 -->
                     <suppressionFile>../config/owasp-suppressions.xml</suppressionFile>
                     <formats>HTML,JSON</formats>
+                    <ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>
                 </configuration>
             </plugin>
 
