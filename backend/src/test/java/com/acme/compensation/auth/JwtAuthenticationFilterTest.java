@@ -59,6 +59,19 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
+    @DisplayName("login endpoint is bypassed from JWT authentication filter")
+    void loginEndpoint_isBypassedFromFilter() throws ServletException, IOException {
+        request.setServletPath("/api/auth/login");
+        request.addHeader("Authorization", "Bearer some-token");
+
+        filter.doFilter(request, response, filterChain);
+
+        verify(filterChain).doFilter(request, response);
+        verify(jwtService, never()).extractUsername(any());
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+    }
+
+    @Test
     @DisplayName("null Authorization header continues chain without authentication")
     void nullAuthHeader_continuesChain() throws ServletException, IOException {
         filter.doFilter(request, response, filterChain);

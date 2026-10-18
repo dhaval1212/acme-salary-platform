@@ -16,6 +16,12 @@ export const authInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
   next: HttpHandlerFn
 ) => {
+  // Bypass login endpoint: user does not have a token for that API,
+  // and 401 indicates invalid credentials rather than an expired session
+  if (req.url.includes('/auth/login')) {
+    return next(req);
+  }
+
   const authService = inject(AuthService);
   const token = authService.getToken();
 
